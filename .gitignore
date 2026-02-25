@@ -57,5 +57,4 @@ baseline.json
 
 # pnpm store
 .pnpm-store
-.Fmatputes-Dashboard\frontend\.vscode
-.vscode/
+**/.vscode/
