@@ -4,7 +4,7 @@ require('dotenv').config();
 
 // Importar configuración de BD y Modelos
 const { connectDB, sequelize } = require('./config/db');
-const User = require('./models/User'); 
+const User = require('./models/user'); 
 
 const app = express();
 const PORT = process.env.PORT || 3000;
