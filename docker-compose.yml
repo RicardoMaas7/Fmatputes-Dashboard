@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: fmaputes_frontend
+    restart: unless-stopped
+    networks:
+      - fmaputes_net
+      - npm_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fmaputes_backend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=database
+      - DB_PORT=5432
+      - DB_USER=fmaputes_admin
+      - DB_PASSWORD=fmaputes_secure_pass
+      - DB_NAME=fmaputes_db
+    networks:
+      - fmaputes_net
+      - npm_network
+
+  database:
+    image: postgres:15-alpine
+    container_name: fmaputes_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: fmaputes_admin
+      POSTGRES_PASSWORD: fmaputes_secure_pass
+      POSTGRES_DB: fmaputes_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - fmaputes_net
+
+networks:
+  fmaputes_net:
+    name: fmaputes_internal_net
+    driver: bridge
+  npm_network:
+    external: true
+    name: backend_network
+
+volumes:
+  pgdata:
+    name: fmaputes_pgdata

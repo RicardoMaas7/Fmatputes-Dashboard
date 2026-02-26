@@ -1,0 +1,36 @@
+<div class="min-h-screen bg-wired-bg text-wired-neon font-mono flex flex-col md:flex-row selection:bg-wired-neon selection:text-wired-bg">
+  
+  <aside class="w-full md:w-64 border-b md:border-b-0 md:border-r border-wired-dim flex flex-col shadow-[0_0_15px_rgba(30,92,16,0.2)]">
+    
+    <div class="p-5 border-b border-wired-dim bg-wired-panel">
+      <h1 class="text-xl font-bold tracking-widest text-wired-amber">
+        <span class="animate-pulse">_></span> FMAPUTES
+      </h1>
+      <p class="text-xs opacity-60 mt-1">v1.0.0 // SYS.DASHBOARD</p>
+    </div>
+
+    <nav class="flex-1 p-4 space-y-3 bg-wired-panel">
+      <a routerLink="/dashboard" routerLinkActive="bg-wired-neon text-wired-bg font-bold shadow-[0_0_10px_#39ff14]" 
+         class="block px-4 py-2 border border-wired-dim hover:bg-wired-dim hover:text-white transition-all duration-200 cursor-pointer uppercase text-sm">
+        [01] Dashboard
+      </a>
+      
+      <a routerLink="/profile" routerLinkActive="bg-wired-neon text-wired-bg font-bold shadow-[0_0_10px_#39ff14]" 
+         class="block px-4 py-2 border border-wired-dim hover:bg-wired-dim hover:text-white transition-all duration-200 cursor-pointer uppercase text-sm">
+        [02] User_Profile
+      </a>
+    </nav>
+
+    <div class="p-4 border-t border-wired-dim bg-wired-panel text-xs opacity-70 flex justify-between">
+      <span>STATUS: ONLINE</span>
+      <span class="text-wired-neon">OK</span>
+    </div>
+  </aside>
+
+  <main class="flex-1 p-6 overflow-y-auto bg-wired-bg">
+    <div class="max-w-7xl mx-auto">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+  
+</div>
