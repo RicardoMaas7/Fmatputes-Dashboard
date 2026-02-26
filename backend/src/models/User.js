@@ -12,7 +12,7 @@ const User = sequelize.define('User', {
     allowNull: false,
     unique: true,
   },
-  password: { // <-- NUEVO CAMPO AGREGADO
+  password: {
     type: DataTypes.STRING,
     allowNull: false,
   },
@@ -22,7 +22,7 @@ const User = sequelize.define('User', {
   },
 }, {
   tableName: 'users',
-  timestamps: true, // Automáticamente crea 'createdAt' y 'updatedAt'
+  timestamps: true,
   createdAt: 'created_at',
   updatedAt: 'updated_at'
 });

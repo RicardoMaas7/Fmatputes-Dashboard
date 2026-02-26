@@ -4,7 +4,7 @@ require('dotenv').config();
 
 // Importar configuración de BD y Modelos
 const { connectDB, sequelize } = require('./config/db');
-const User = require('./models/user'); 
+const User = require('./models/User');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -27,6 +27,11 @@ app.get('/api/health', (req, res) => {
         message: 'Fmaputes API operando correctamente.'
     });
 });
+// Rutas de autenticación
+app.use('/api/auth', require('./routes/authRoutes'));
+
+// Registrar rutas de estadísticas
+app.use('/api/stats', require('./routes/statsRoutes'));
 
 // Inicialización del servidor y Base de Datos
 const startServer = async () => {
