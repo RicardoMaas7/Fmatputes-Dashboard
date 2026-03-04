@@ -1,0 +1,362 @@
+<div class="admin-container p-6 animate-fade-in">
+  <!-- HEADER -->
+  <div class="mb-6">
+    <h2 class="text-xl text-wired-amber glow-text uppercase tracking-widest mb-1">
+      <span class="text-wired-neon">&gt;</span> Panel de Administración
+    </h2>
+    <p class="text-wired-dim-light text-xs tracking-wide">Gestión de usuarios, servicios, transporte y tesorería</p>
+  </div>
+
+  <!-- TABS -->
+  <div class="flex gap-1 mb-6 border-b border-wired-neon/10 pb-2 overflow-x-auto">
+    <button *ngFor="let tab of tabs"
+            (click)="switchTab(tab.key)"
+            class="tab-btn px-4 py-2 text-xs uppercase tracking-wider rounded-t transition-all whitespace-nowrap flex items-center gap-1.5"
+            [class.active]="activeTab === tab.key">
+      <span [innerHTML]="getTabIcon(tab.icon)"></span> {{ tab.label }}
+    </button>
+  </div>
+
+  <!-- ALERT -->
+  <div *ngIf="msg" class="mb-4 p-3 rounded text-sm animate-fade-in border flex items-center gap-2"
+       [ngClass]="msg.type === 'ok' ? 'border-green-500/30 text-green-400' : 'border-red-500/30 text-red-400'">
+    <svg *ngIf="msg.type === 'ok'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    <svg *ngIf="msg.type !== 'ok'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    {{ msg.text }}
+  </div>
+
+  <!-- LOADING -->
+  <div *ngIf="loading" class="flex items-center justify-center py-16">
+    <span class="text-wired-neon animate-pulse text-sm tracking-widest">[ CARGANDO... ]</span>
+  </div>
+
+  <!-- ═══════ USERS TAB ═══════ -->
+  <div *ngIf="!loading && activeTab === 'users'">
+    <div class="flex items-center justify-between mb-4">
+      <span class="text-xs text-wired-dim-light">{{ users.length }} usuarios registrados</span>
+      <button (click)="showNewUserForm = !showNewUserForm" class="neon-btn text-xs px-3 py-1">
+        {{ showNewUserForm ? 'Cancelar' : '+ Nuevo Usuario' }}
+      </button>
+    </div>
+
+    <!-- New User Form -->
+    <div *ngIf="showNewUserForm" class="neon-card p-4 mb-4 animate-slide-up">
+      <h3 class="text-sm text-wired-amber uppercase tracking-wider mb-3">Crear Usuario</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <input [(ngModel)]="newUser.username" placeholder="Username" class="neon-input text-sm" />
+        <input [(ngModel)]="newUser.password" placeholder="Password" type="password" class="neon-input text-sm" />
+        <input [(ngModel)]="newUser.displayName" placeholder="Nombre para mostrar" class="neon-input text-sm" />
+        <input [(ngModel)]="newUser.birthday" placeholder="YYYY-MM-DD" class="neon-input text-sm" />
+        <select [(ngModel)]="newUser.role" class="neon-input text-sm bg-wired-panel">
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <button (click)="createUser()" class="neon-btn text-xs px-4 py-2 mt-3">CREAR</button>
+    </div>
+
+    <!-- Users Table -->
+    <div class="neon-card overflow-hidden">
+      <table class="w-full text-xs">
+        <thead>
+          <tr class="border-b border-wired-neon/10 text-wired-dim-light uppercase tracking-wider">
+            <th class="py-2 px-3 text-left">Usuario</th>
+            <th class="py-2 px-3 text-left hidden sm:table-cell">Nombre</th>
+            <th class="py-2 px-3 text-center">Rol</th>
+            <th class="py-2 px-3 text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let u of users" class="border-b border-wired-dim/20 hover:bg-wired-neon/5 transition-colors">
+            <td class="py-2 px-3 text-wired-neon">{{ u.username }}</td>
+            <td class="py-2 px-3 text-wired-dim-light hidden sm:table-cell">{{ u.displayName || '—' }}</td>
+            <td class="py-2 px-3 text-center">
+              <span class="px-2 py-0.5 rounded text-[10px] uppercase"
+                    [ngClass]="u.role === 'admin' ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/10 text-green-400'">
+                {{ u.role }}
+              </span>
+            </td>
+            <td class="py-2 px-3 text-center">
+              <div class="flex items-center justify-center gap-2">
+                <button (click)="toggleUserRole(u)" class="text-wired-dim-light hover:text-wired-amber text-[10px] underline">
+                  {{ u.role === 'admin' ? '→ user' : '→ admin' }}
+                </button>
+                <button (click)="deleteUser(u)" class="text-red-500/50 hover:text-red-400 text-[10px] underline">
+                  eliminar
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════ SERVICES TAB ═══════ -->
+  <div *ngIf="!loading && activeTab === 'services'">
+    <div class="flex items-center justify-between mb-4">
+      <span class="text-xs text-wired-dim-light">{{ services.length }} servicios</span>
+      <button (click)="showNewServiceForm = !showNewServiceForm" class="neon-btn text-xs px-3 py-1">
+        {{ showNewServiceForm ? 'Cancelar' : '+ Nuevo Servicio' }}
+      </button>
+    </div>
+
+    <!-- New Service Form -->
+    <div *ngIf="showNewServiceForm" class="neon-card p-4 mb-4 animate-slide-up">
+      <h3 class="text-sm text-wired-amber uppercase tracking-wider mb-3">Crear Servicio</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <input [(ngModel)]="newService.name" placeholder="Nombre (ej: ChatGPT)" class="neon-input text-sm" />
+        <input [(ngModel)]="newService.totalCost" placeholder="Costo total" type="number" class="neon-input text-sm" />
+        <input [(ngModel)]="newService.nextPaymentDate" placeholder="Prox. pago YYYY-MM-DD" class="neon-input text-sm" />
+        <input [(ngModel)]="newService.iconUrl" placeholder="URL ícono (opcional)" class="neon-input text-sm" />
+      </div>
+      <button (click)="createService()" class="neon-btn text-xs px-4 py-2 mt-3">CREAR</button>
+    </div>
+
+    <!-- Services List -->
+    <div class="space-y-2">
+      <div *ngFor="let svc of services" class="neon-card p-4">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex-1 min-w-0">
+            <div class="text-sm text-wired-neon font-bold mb-2">{{ svc.name }}</div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-[10px] text-wired-dim-light uppercase block mb-1">Costo total</label>
+                <input [(ngModel)]="svc.totalCost" type="number" step="0.01"
+                       class="neon-input text-xs w-full"
+                       (blur)="saveServiceField(svc)" />
+              </div>
+              <div>
+                <label class="text-[10px] text-wired-dim-light uppercase block mb-1">Prox. pago</label>
+                <input [(ngModel)]="svc.nextPaymentDate" type="date"
+                       class="neon-input text-xs w-full"
+                       (change)="saveServiceField(svc)" />
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-col items-end gap-2 pt-1">
+            <span class="text-[10px] px-2 py-0.5 rounded"
+                  [ngClass]="svc.isActive ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'">
+              {{ svc.isActive ? 'ACTIVO' : 'INACTIVO' }}
+            </span>
+            <button (click)="toggleServiceActive(svc)" class="text-[10px] text-wired-dim-light hover:text-wired-amber underline">
+              {{ svc.isActive ? 'Desactivar' : 'Activar' }}
+            </button>
+            <button (click)="openDebts(svc)" class="text-[10px] text-wired-neon hover:text-green-300 underline">
+              Deudas
+            </button>
+            <button (click)="deleteService(svc)" class="text-[10px] text-red-500/50 hover:text-red-400 underline">
+              Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ SERVICE DEBTS MODAL ═══════ -->
+  <div *ngIf="showDebtsModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 animate-fade-in" (click)="closeDebts()">
+    <div class="neon-card p-5 w-full max-w-md mx-4" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm text-wired-amber uppercase tracking-wider">Deudas del Servicio</h3>
+        <button (click)="closeDebts()" class="text-wired-dim-light hover:text-white text-lg">&times;</button>
+      </div>
+      <div *ngIf="selectedServiceDebts.length === 0" class="text-xs text-wired-dim-light text-center py-8">
+        Sin deudas registradas. Los montos se asignan automáticamente.
+      </div>
+      <div class="space-y-2 max-h-80 overflow-y-auto">
+        <div *ngFor="let debt of selectedServiceDebts" class="flex items-center gap-3 p-2 border border-wired-dim/20 rounded">
+          <span class="text-xs text-wired-neon flex-1">{{ debt.user?.name || debt.user?.email || 'User #' + debt.userId }}</span>
+          <input [(ngModel)]="debt.pendingBalance" type="number" step="0.01" class="neon-input text-xs w-24 text-right" />
+          <button (click)="saveDebt(debt)" class="text-[10px] text-wired-amber hover:text-amber-300 underline">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ TRANSPORT TAB ═══════ -->
+  <div *ngIf="!loading && activeTab === 'transport'">
+    <div class="flex items-center justify-between mb-4">
+      <span class="text-xs text-wired-dim-light">{{ transports.length }} transportes registrados</span>
+      <button (click)="showNewTransportForm = !showNewTransportForm" class="neon-btn text-xs px-3 py-1">
+        {{ showNewTransportForm ? 'Cancelar' : '+ Nuevo Transporte' }}
+      </button>
+    </div>
+
+    <!-- New Transport Form -->
+    <div *ngIf="showNewTransportForm" class="neon-card p-4 mb-4 animate-slide-up">
+      <h3 class="text-sm text-wired-amber uppercase tracking-wider mb-3">Crear Transporte</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <input [(ngModel)]="newTransport.name" placeholder="Nombre (ej: Carro de Juan)" class="neon-input text-sm" />
+        <input [(ngModel)]="newTransport.driverName" placeholder="Conductor" class="neon-input text-sm" />
+        <input [(ngModel)]="newTransport.paradero" placeholder="Paradero" class="neon-input text-sm" />
+        <input [(ngModel)]="newTransport.departureMorning" placeholder="Hora salida (ej: 07:00)" class="neon-input text-sm" />
+        <input [(ngModel)]="newTransport.returnMorning" placeholder="Hora regreso (ej: 13:00)" class="neon-input text-sm" />
+        <input [(ngModel)]="newTransport.totalSeats" placeholder="Total cupos" type="number" class="neon-input text-sm" />
+      </div>
+      <button (click)="createTransport()" class="neon-btn text-xs px-4 py-2 mt-3">CREAR</button>
+    </div>
+
+    <div class="space-y-3">
+      <div *ngFor="let t of transports" class="neon-card p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-sm text-wired-neon font-bold">{{ t.name }}</div>
+          <span class="text-xs text-wired-dim-light">{{ t.occupiedSeats }}/{{ t.totalSeats }} cupos</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <div>
+            <label class="text-[10px] text-wired-dim-light uppercase block mb-1">Conductor</label>
+            <input [(ngModel)]="t.driverName" class="neon-input text-xs w-full" (blur)="saveTransportField(t)" />
+          </div>
+          <div>
+            <label class="text-[10px] text-wired-dim-light uppercase block mb-1">Paradero</label>
+            <input [(ngModel)]="t.paradero" class="neon-input text-xs w-full" (blur)="saveTransportField(t)" />
+          </div>
+          <div>
+            <label class="text-[10px] text-wired-dim-light uppercase block mb-1">Cupos</label>
+            <input [(ngModel)]="t.totalSeats" type="number" class="neon-input text-xs w-full" (blur)="saveTransportField(t)" />
+          </div>
+          <div>
+            <label class="text-[10px] text-wired-dim-light uppercase block mb-1">Hora salida</label>
+            <input [(ngModel)]="t.departureMorning" class="neon-input text-xs w-full" placeholder="07:00" (blur)="saveTransportField(t)" />
+          </div>
+          <div>
+            <label class="text-[10px] text-wired-dim-light uppercase block mb-1">Hora regreso</label>
+            <input [(ngModel)]="t.returnMorning" class="neon-input text-xs w-full" placeholder="13:00" (blur)="saveTransportField(t)" />
+          </div>
+        </div>
+        <!-- Seats -->
+        <div *ngIf="t.seats?.length" class="mt-3 border-t border-wired-neon/10 pt-2">
+          <div class="text-[10px] text-wired-dim-light uppercase tracking-wider mb-1">Pasajeros:</div>
+          <div class="flex flex-wrap gap-1">
+            <span *ngFor="let s of t.seats"
+                  class="text-[10px] px-2 py-0.5 bg-wired-neon/10 text-wired-neon rounded">
+              {{ s.user?.displayName || s.user?.username }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ TREASURY TAB ═══════ -->
+  <div *ngIf="!loading && activeTab === 'treasury'">
+    <div *ngIf="treasury" class="space-y-4">
+      <!-- Treasury Overview -->
+      <div class="neon-card p-5">
+        <div class="text-sm text-wired-amber font-bold uppercase tracking-wider mb-3">{{ treasury.name }}</div>
+        <div class="grid grid-cols-2 gap-4 text-sm mb-4">
+          <div>
+            <div class="text-[10px] text-wired-dim-light uppercase">Recaudado</div>
+            <div class="text-wired-neon text-lg font-bold">${{ treasury.totalCollected | number:'1.0-0' }}</div>
+          </div>
+          <div>
+            <label class="text-[10px] text-wired-dim-light uppercase block mb-1">Meta ($)</label>
+            <input [(ngModel)]="treasury.nextGoalAmount" type="number" step="1"
+                   class="neon-input text-sm w-full"
+                   (blur)="saveTreasuryGoal()" />
+          </div>
+        </div>
+        <div class="mb-2">
+          <label class="text-[10px] text-wired-dim-light uppercase block mb-1">Descripción de la meta</label>
+          <input [(ngModel)]="treasury.nextGoalDescription"
+                 class="neon-input text-xs w-full"
+                 placeholder="Descripción de la meta..."
+                 (blur)="saveTreasuryGoal()" />
+        </div>
+        <!-- Progress bar -->
+        <div class="w-full h-3 bg-wired-dim rounded-full overflow-hidden">
+          <div class="h-full bg-gradient-to-r from-wired-neon to-wired-amber transition-all duration-500 rounded-full"
+               [style.width.%]="treasury.progress"></div>
+        </div>
+        <div class="text-right text-xs text-wired-neon mt-1">{{ treasury.progress | number:'1.0-0' }}%</div>
+      </div>
+
+      <!-- Register Payment -->
+      <div class="neon-card p-4">
+        <h3 class="text-sm text-wired-amber uppercase tracking-wider mb-3">Registrar Pago</h3>
+        <div class="flex gap-3 items-end flex-wrap">
+          <div class="flex-1 min-w-[150px]">
+            <label class="text-[10px] text-wired-dim-light uppercase block mb-1">Usuario</label>
+            <select [(ngModel)]="paymentForm.userId" class="neon-input text-sm bg-wired-panel w-full">
+              <option value="">Seleccionar...</option>
+              <option *ngFor="let u of users" [value]="u.id">{{ u.displayName || u.username }}</option>
+            </select>
+          </div>
+          <div class="w-32">
+            <label class="text-[10px] text-wired-dim-light uppercase block mb-1">Monto</label>
+            <input [(ngModel)]="paymentForm.amountPaid" type="number" placeholder="$0" class="neon-input text-sm w-full" />
+          </div>
+          <button (click)="registerPayment()" class="neon-btn text-xs px-4 py-2">REGISTRAR</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ REMINDERS TAB ═══════ -->
+  <div *ngIf="!loading && activeTab === 'reminders'">
+    <div class="flex items-center justify-between mb-4">
+      <span class="text-xs text-wired-dim-light">{{ reminders.length }} recordatorios</span>
+      <button (click)="showNewReminderForm = !showNewReminderForm" class="neon-btn text-xs px-3 py-1">
+        {{ showNewReminderForm ? 'Cancelar' : '+ Nuevo Recordatorio' }}
+      </button>
+    </div>
+
+    <!-- New Reminder Form -->
+    <div *ngIf="showNewReminderForm" class="neon-card p-4 mb-4 animate-slide-up">
+      <h3 class="text-sm text-wired-amber uppercase tracking-wider mb-3">Crear Recordatorio</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <input [(ngModel)]="newReminder.title" placeholder="Título" class="neon-input text-sm" />
+        <select [(ngModel)]="newReminder.type" class="neon-input text-sm bg-wired-panel">
+          <option value="info">Info</option>
+          <option value="warning">Advertencia</option>
+          <option value="urgent">Urgente</option>
+        </select>
+        <textarea [(ngModel)]="newReminder.message" placeholder="Mensaje (opcional)" class="neon-input text-sm sm:col-span-2" rows="2"></textarea>
+        <div>
+          <label class="text-[10px] text-wired-dim-light uppercase block mb-1">Expira (opcional)</label>
+          <input [(ngModel)]="newReminder.expiresAt" type="date" class="neon-input text-sm w-full" />
+        </div>
+      </div>
+      <button (click)="createReminder()" class="neon-btn text-xs px-4 py-2 mt-3">CREAR</button>
+    </div>
+
+    <!-- Reminders List -->
+    <div class="space-y-2">
+      <div *ngFor="let r of reminders" class="neon-card p-4">
+        <div class="flex items-center justify-between">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-bold" [ngClass]="{
+                'text-wired-neon': r.type === 'info',
+                'text-wired-amber': r.type === 'warning',
+                'text-red-400': r.type === 'urgent'
+              }">{{ r.title }}</span>
+              <span class="text-[10px] px-2 py-0.5 rounded uppercase"
+                    [ngClass]="(r.isActive || r.is_active) ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'">
+                {{ (r.isActive || r.is_active) ? 'Activo' : 'Inactivo' }}
+              </span>
+            </div>
+            <p *ngIf="r.message" class="text-xs text-wired-dim-light mt-1">{{ r.message }}</p>
+            <div class="flex gap-3 text-[10px] text-wired-dim-light mt-1">
+              <span *ngIf="r.expires_at || r.expiresAt">Expira: {{ (r.expires_at || r.expiresAt) | date:'dd/MM/yyyy' }}</span>
+              <span *ngIf="r.creator">Creado por: {{ r.creator.displayName }}</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 ml-3">
+            <button (click)="toggleReminderActive(r)" class="text-[10px] text-wired-dim-light hover:text-wired-amber underline">
+              {{ (r.isActive || r.is_active) ? 'Desactivar' : 'Activar' }}
+            </button>
+            <button (click)="deleteReminder(r)" class="text-[10px] text-red-500/50 hover:text-red-400 underline">
+              Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="reminders.length === 0 && !showNewReminderForm" class="text-center text-xs text-wired-dim-light py-12 border border-dashed border-wired-dim rounded-lg">
+      No hay recordatorios. Crea uno para que todos lo vean en su dashboard.
+    </div>
+  </div>
+</div>

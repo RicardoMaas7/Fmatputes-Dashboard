@@ -1,0 +1,113 @@
+<div class="min-h-screen bg-wired-bg flex items-center justify-center p-4 grid-overlay">
+
+  <!-- Ambient glow effect -->
+  <div class="fixed inset-0 pointer-events-none">
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-wired-neon/5 rounded-full blur-[120px]"></div>
+  </div>
+
+  <div class="w-full max-w-lg relative z-10 animate-fade-in">
+
+    <!-- Terminal Window -->
+    <div class="border border-wired-dim rounded-lg bg-wired-panel shadow-neon-sm overflow-hidden">
+
+      <!-- Terminal Title Bar -->
+      <div class="flex items-center gap-2 px-4 py-2 border-b border-wired-dim bg-wired-bg">
+        <span class="w-3 h-3 rounded-full bg-wired-danger"></span>
+        <span class="w-3 h-3 rounded-full bg-wired-amber"></span>
+        <span class="w-3 h-3 rounded-full bg-wired-neon"></span>
+        <span class="ml-3 text-xs text-wired-dim-light font-mono">fmaputes&#64;sys:~/auth</span>
+      </div>
+
+      <!-- Terminal Body -->
+      <div class="p-6 font-mono">
+
+        <!-- Boot Sequence -->
+        <div class="mb-6 text-sm space-y-1">
+          <div *ngFor="let line of visibleLines; let i = index"
+               class="animate-slide-right"
+               [class.text-wired-neon]="i < bootLines.length - 1"
+               [class.text-wired-amber]="i === bootLines.length - 1">
+            <span class="text-wired-dim mr-2">&gt;</span>{{ line }}
+          </div>
+          <div *ngIf="!bootComplete" class="text-wired-neon">
+            <span class="animate-pulse">█</span>
+          </div>
+        </div>
+
+        <!-- Login Form -->
+        <form *ngIf="bootComplete" (ngSubmit)="onSubmit()" class="space-y-5 animate-fade-in">
+          
+          <!-- ASCII Art Header -->
+          <pre class="text-wired-neon text-[10px] leading-tight mb-4 glow-text-sm select-none text-center">
+ _____ __  __    _    ____  _   _ _____ _____ ____  
+|  ___|  \/  |  / \  |  _ \| | | |_   _| ____/ ___| 
+| |_  | |\/| | / _ \ | |_) | | | | | | |  _| \___ \ 
+|  _| | |  | |/ ___ \|  __/| |_| | | | | |___ ___) |
+|_|   |_|  |_/_/   \_\_|    \___/  |_| |_____|____/ 
+          </pre>
+
+          <!-- Username -->
+          <div>
+            <label class="block text-xs text-wired-dim-light mb-1 uppercase tracking-widest">
+              &gt; username
+            </label>
+            <input
+              type="text"
+              [(ngModel)]="username"
+              name="username"
+              class="neon-input"
+              placeholder="Enter username..."
+              autocomplete="username"
+              autofocus
+            />
+          </div>
+
+          <!-- Password -->
+          <div>
+            <label class="block text-xs text-wired-dim-light mb-1 uppercase tracking-widest">
+              &gt; password
+            </label>
+            <div class="relative">
+              <input
+                [type]="showPassword ? 'text' : 'password'"
+                [(ngModel)]="password"
+                name="password"
+                class="neon-input pr-12"
+                placeholder="Enter password..."
+                autocomplete="current-password"
+              />
+              <button
+                type="button"
+                (click)="togglePassword()"
+                class="absolute right-2 top-1/2 -translate-y-1/2 text-wired-dim-light hover:text-wired-neon transition-colors text-xs px-2 py-1">
+                {{ showPassword ? 'HIDE' : 'SHOW' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Error Message -->
+          <div *ngIf="errorMessage" class="text-wired-danger text-sm border border-wired-danger/30 bg-wired-danger/5 px-3 py-2 rounded-md animate-fade-in flex items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            {{ errorMessage }}
+          </div>
+
+          <!-- Submit Button -->
+          <button
+            type="submit"
+            [disabled]="isLoading"
+            class="neon-btn w-full py-3 text-center">
+            <span *ngIf="!isLoading">[ AUTHENTICATE ]</span>
+            <span *ngIf="isLoading" class="animate-pulse">CONNECTING...</span>
+          </button>
+
+          <!-- Footer -->
+          <p class="text-center text-xs text-wired-dim-light mt-4">
+            FMAPUTES SECURE SYSTEM // AUTHORIZED PERSONNEL ONLY
+          </p>
+        </form>
+
+      </div>
+    </div>
+
+  </div>
+</div>

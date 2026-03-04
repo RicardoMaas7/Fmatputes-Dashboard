@@ -1,0 +1,55 @@
+/* Admin component styles */
+
+.admin-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.tab-btn {
+  color: rgba(57, 255, 20, 0.4);
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s cubic-bezier(.4,0,.2,1);
+}
+
+.tab-btn:hover {
+  color: rgba(57, 255, 20, 0.7);
+  background: rgba(57, 255, 20, 0.04);
+}
+
+.tab-btn.active {
+  color: #39ff14;
+  border-color: rgba(57, 255, 20, 0.12);
+  background: rgba(57, 255, 20, 0.06);
+  box-shadow: 0 -2px 10px rgba(57, 255, 20, 0.08);
+}
+
+table {
+  border-collapse: collapse;
+}
+
+select.neon-input {
+  cursor: pointer;
+}
+
+select.neon-input option {
+  background: #0e0e16;
+  color: #39ff14;
+}
+
+table {
+  font-family: 'Inter', sans-serif;
+}
+
+table th {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+}
+
+table td {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+}

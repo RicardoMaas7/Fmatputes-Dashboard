@@ -1,0 +1,110 @@
+<!-- MEMBER CARD -->
+<div class="member-card neon-card overflow-hidden transition-all duration-300"
+     [class.completed]="isComplete"
+     [class.locked-card]="isLocked"
+     [style.animation-delay]="animationDelay">
+
+  <!-- HEADER (clickable) -->
+  <div class="member-header flex items-center gap-4 p-4 cursor-pointer hover:bg-wired-neon/5 transition-colors"
+       (click)="onToggle()">
+
+    <!-- Avatar -->
+    <div class="avatar-ring"
+         [ngClass]="isComplete ? 'border-amber' : 'border-neon'">
+      <img *ngIf="user.profilePhotoUrl"
+           [src]="user.profilePhotoUrl"
+           [alt]="displayName"
+           class="avatar-img matrix-photo" />
+      <div *ngIf="!user.profilePhotoUrl" class="avatar-fallback">
+        {{ initial }}
+      </div>
+    </div>
+
+    <!-- Name & Status -->
+    <div class="flex-1 min-w-0">
+      <div class="text-sm font-bold truncate"
+           [class.text-wired-amber]="isComplete"
+           [class.text-wired-neon]="!isComplete">
+        {{ displayName }}
+      </div>
+      <div class="text-xs text-wired-dim-light">
+        <span *ngIf="isLocked" class="text-wired-amber flex items-center gap-1">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          Votación bloqueada
+        </span>
+        <span *ngIf="isComplete && !isLocked" class="text-wired-amber flex items-center gap-1">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Votación completa
+        </span>
+        <span *ngIf="!isComplete">
+          {{ user.missingCategories.length }} categorías pendientes
+        </span>
+      </div>
+    </div>
+
+    <!-- Expand icon -->
+    <div class="text-wired-neon/50 transition-transform duration-200"
+         [class.rotate-180]="expanded">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+  </div>
+
+  <!-- EXPANDED VOTING FORM -->
+  <div *ngIf="expanded" class="voting-form px-4 pb-4 animate-slide-up">
+    <div class="border-t border-wired-neon/10 pt-4 space-y-4">
+
+      <!-- Locked overlay message -->
+      <div *ngIf="isLocked" class="locked-message">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffbf00" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        <span>Tus votos para {{ displayName }} ya fueron registrados y son definitivos para este semestre.</span>
+      </div>
+
+      <!-- Category Sliders (only if NOT locked) -->
+      <ng-container *ngIf="!isLocked">
+        <div *ngFor="let cat of categories" class="category-row">
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-xs uppercase tracking-wider flex items-center gap-2 text-wired-neon">
+              <span class="text-base">{{ cat.icon }}</span>
+              {{ cat.label }}
+            </label>
+            <span class="text-sm font-bold w-8 text-right"
+                  [class.text-wired-neon]="getScore(cat.key) >= 7"
+                  [class.text-wired-amber]="getScore(cat.key) >= 4 && getScore(cat.key) < 7"
+                  [class.text-red-400]="getScore(cat.key) < 4">
+              {{ getScore(cat.key) }}
+            </span>
+          </div>
+
+          <div class="slider-container">
+            <input
+              type="range"
+              [min]="1"
+              [max]="10"
+              [step]="1"
+              [value]="getScore(cat.key)"
+              (input)="onScoreChange(cat.key, +$any($event.target).value)"
+              class="neon-slider w-full"
+            />
+            <div class="flex justify-between text-[10px] text-wired-dim-light mt-0.5 px-0.5">
+              <span>1</span><span>5</span><span>10</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit button -->
+        <button
+          (click)="onSubmit()"
+          [disabled]="submitting"
+          class="neon-btn w-full text-sm py-2 mt-2"
+          [class.opacity-50]="submitting">
+          <span *ngIf="!submitting">ENVIAR VOTOS PARA {{ displayName.toUpperCase() }}</span>
+          <span *ngIf="submitting" class="animate-pulse">ENVIANDO...</span>
+        </button>
+      </ng-container>
+    </div>
+  </div>
+</div>

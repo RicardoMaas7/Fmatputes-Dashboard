@@ -1,0 +1,87 @@
+<div class="voting-container p-6 animate-fade-in">
+  <!-- HEADER -->
+  <div class="mb-6">
+    <h2 class="text-xl text-wired-neon glow-text uppercase tracking-widest mb-1">
+      <span class="text-wired-amber">&gt;</span> Sistema de Votación
+    </h2>
+    <p class="text-wired-dim-light text-xs tracking-wide">
+      Evalúa a cada miembro del equipo en 5 categorías (1–10). <strong class="text-wired-amber">Los votos son definitivos</strong> — no podrás modificarlos hasta el próximo semestre.
+    </p>
+  </div>
+
+  <!-- LOADING -->
+  <div *ngIf="loading" class="flex items-center justify-center py-20">
+    <div class="text-wired-neon animate-pulse tracking-widest text-sm">
+      [ CARGANDO MIEMBROS... ]
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div *ngIf="!loading">
+    <!-- PROGRESS BAR -->
+    <app-vote-progress
+      [period]="period"
+      [totalUsers]="totalUsers"
+      [completedUsers]="completedUsers">
+    </app-vote-progress>
+
+    <!-- SEMESTER LOCKED BANNER -->
+    <div *ngIf="allLocked" class="locked-banner neon-card p-6 text-center mb-6">
+      <div class="mb-3">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ffbf00" stroke-width="1.5" class="mx-auto">
+          <rect x="3" y="11" width="18" height="11" rx="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+      <div class="text-wired-amber text-lg glow-text mb-1">VOTACIÓN CERRADA</div>
+      <div class="text-wired-dim-light text-xs">
+        Ya evaluaste a todos los miembros del equipo para el semestre {{ period }}.<br/>
+        La votación se reabrirá en el próximo semestre.
+      </div>
+    </div>
+
+    <!-- ALERTS -->
+    <div *ngIf="submitSuccess" class="mb-4 p-3 border border-wired-neon/30 bg-wired-neon/5 rounded text-wired-neon text-sm animate-fade-in flex items-center gap-2">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      {{ submitSuccess }}
+    </div>
+    <div *ngIf="submitError" class="mb-4 p-3 border border-red-500/30 bg-red-500/5 rounded text-red-400 text-sm animate-fade-in flex items-center gap-2">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      {{ submitError }}
+    </div>
+
+    <!-- MEMBERS LIST (modular cards) -->
+    <div class="space-y-3">
+      <app-vote-member-card
+        *ngFor="let user of pendingUsers; let i = index"
+        [user]="user"
+        [categories]="categories"
+        [scores]="getUserScores(user.id)"
+        [expanded]="isExpanded(user.id)"
+        [submitting]="submitting"
+        [animationDelay]="i * 50 + 'ms'"
+        (toggle)="toggleUser($event)"
+        (scoreChange)="onScoreChange(user.id, $event)"
+        (submitVotes)="submitVotesFor($event)">
+      </app-vote-member-card>
+    </div>
+
+    <!-- SUBMIT ALL BUTTON (only when there are unlocked pending users) -->
+    <div class="mt-6" *ngIf="hasPending && !allLocked">
+      <button
+        (click)="submitAllVotes()"
+        [disabled]="submitting"
+        class="neon-btn w-full py-3 text-sm uppercase tracking-widest"
+        [class.opacity-50]="submitting">
+        <span *ngIf="!submitting">
+          <svg class="inline-block mr-1" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          ENVIAR TODOS LOS VOTOS PENDIENTES
+        </span>
+        <span *ngIf="submitting" class="animate-pulse">PROCESANDO...</span>
+      </button>
+      <p class="text-center text-[10px] text-wired-dim-light mt-2">
+        Los votos enviados son definitivos para este semestre
+      </p>
+    </div>
+  </div>
+</div>

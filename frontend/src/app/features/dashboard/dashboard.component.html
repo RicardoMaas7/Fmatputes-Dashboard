@@ -1,1 +1,66 @@
-<p>dashboard works!</p>
+<!-- Loading State -->
+<div *ngIf="isLoading" class="flex items-center justify-center h-[80vh]">
+  <div class="text-center">
+    <div class="w-12 h-12 border-2 border-wired-neon border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+    <p class="text-wired-neon animate-pulse text-sm uppercase tracking-widest">Cargando dashboard...</p>
+  </div>
+</div>
+
+<!-- Dashboard Grid -->
+<div *ngIf="!isLoading" class="dashboard-grid p-4 gap-4 animate-fade-in">
+  
+  <!-- ===== LEFT COLUMN ===== -->
+  <div class="left-column space-y-4">
+    <!-- Profile Card -->
+    <app-profile-card
+      [displayName]="displayName"
+      [photoUrl]="user?.profilePhotoUrl || ''"
+      [birthday]="formattedBirthday"
+    ></app-profile-card>
+
+    <!-- Bank Accounts -->
+    <app-bank-accounts
+      [accounts]="bankAccounts"
+    ></app-bank-accounts>
+  </div>
+
+  <!-- ===== CENTER COLUMN ===== -->
+  <div class="center-column space-y-4">
+    <!-- Reminders Banner -->
+    <app-reminders-banner [reminders]="reminders"></app-reminders-banner>
+
+    <!-- Period Filter -->
+    <div class="flex items-center justify-between px-1">
+      <span class="text-[10px] text-wired-dim-light uppercase tracking-widest">Período</span>
+      <select [(ngModel)]="selectedPeriod" (ngModelChange)="onPeriodChange()"
+              class="neon-input text-[10px] py-1 px-2 w-auto">
+        <option value="">Todos</option>
+        <option *ngFor="let p of periods" [value]="p">{{ p }}</option>
+      </select>
+    </div>
+
+    <!-- Radar Chart -->
+    <app-radar-chart
+      [svgContent]="radarSvg"
+      [userName]="displayName"
+      [stats]="radarStats"
+      [isLoading]="isRadarLoading"
+    ></app-radar-chart>
+
+    <!-- Notifications -->
+    <app-notifications-panel
+      [notifications]="notifications"
+      (onMarkRead)="handleMarkRead($event)"
+    ></app-notifications-panel>
+  </div>
+
+  <!-- ===== RIGHT COLUMN ===== -->
+  <div class="right-column">
+    <app-services-panel
+      [services]="services"
+      [transports]="transports"
+      [treasury]="treasury"
+    ></app-services-panel>
+  </div>
+
+</div>

@@ -1,51 +1,39 @@
 const { spawn } = require('child_process');
 const path = require('path');
 
-/**
- * Ejecuta un script de Python y retorna el resultado parseado como JSON
- * @param {string} scriptName - Nombre del script (ej: 'radar_stats.py')
- * @param {Array} args - Argumentos opcionales para pasar al script
- * @returns {Promise<Object>} - Resultado del script como objeto JSON
- */
 const runPythonScript = (scriptName, args = []) => {
     return new Promise((resolve, reject) => {
-        // Ruta relativa desde services/ hacia scripts/python/
-        const scriptPath = path.join(__dirname, '../../../scripts/python', scriptName);
-        
-        // Intentamos con python3, si falla usamos python
-        const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
-        
-        const pythonProcess = spawn(pythonCmd, [scriptPath, ...args]);
-        
-        let stdout = '';
-        let stderr = '';
+        const basePath = process.env.PYTHON_SCRIPTS_PATH || path.resolve(__dirname, '../../scripts/python');
+        const scriptPath = path.join(basePath, scriptName);
+
+        const pythonProcess = spawn('python3', [scriptPath, ...args]);
+
+        let dataString = '';
+        let errorString = '';
 
         pythonProcess.stdout.on('data', (data) => {
-            stdout += data.toString();
+            dataString += data.toString();
         });
 
         pythonProcess.stderr.on('data', (data) => {
-            stderr += data.toString();
+            errorString += data.toString();
         });
 
         pythonProcess.on('close', (code) => {
             if (code !== 0) {
-                console.error('[PythonRunner] Error:', stderr);
-                reject(new Error(stderr || 'Python script exited with code ' + code));
-                return;
+                console.error('[PythonRunner Error]', errorString);
+                return reject(new Error(errorString || 'Python script failed with code ' + code));
             }
-            
             try {
-                const result = JSON.parse(stdout);
+                const result = JSON.parse(dataString);
                 resolve(result);
-            } catch (parseError) {
-                console.error('[PythonRunner] Parse error:', parseError.message);
-                reject(new Error('Failed to parse Python output: ' + stdout));
+            } catch (error) {
+                console.error('[PythonRunner Error] Invalid JSON:', dataString.substring(0, 200));
+                reject(new Error('Python script output is not valid JSON.'));
             }
         });
 
         pythonProcess.on('error', (error) => {
-            console.error('[PythonRunner] Spawn error:', error.message);
             reject(error);
         });
     });

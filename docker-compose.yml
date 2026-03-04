@@ -7,16 +7,20 @@ services:
       dockerfile: Dockerfile
     container_name: fmaputes_frontend
     restart: unless-stopped
+    ports:
+      - "4200:80"
     networks:
       - fmaputes_net
       - npm_network
 
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: fmaputes_backend
     restart: unless-stopped
+    ports:
+      - "3000:3000"
     environment:
       - NODE_ENV=production
       - DB_HOST=database
@@ -24,6 +28,8 @@ services:
       - DB_USER=fmaputes_admin
       - DB_PASSWORD=fmaputes_secure_pass
       - DB_NAME=fmaputes_db
+      - JWT_SECRET=fmaputes_super_secret_key_2026
+      - PYTHON_SCRIPTS_PATH=/usr/src/app/scripts/python
     networks:
       - fmaputes_net
       - npm_network

@@ -18,8 +18,8 @@ const protectRoute = (req, res, next) => {
         req.user = decoded; // Inyectamos los datos del usuario en la request
         next();
     } catch (error) {
-        res.status(401).json({ message: 'Token invalido o expirado' });
+        res.status(401).json({ message: 'Token inválido o expirado' });
     }
 };
 
-module.exports = { protectRoute };
+module.exports = { protectRoute, verifyToken: protectRoute };

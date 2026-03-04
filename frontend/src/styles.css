@@ -1,1 +1,327 @@
-/* You can add global styles to this file, and also import other style files */
+/* ===== FONTS ===== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== BASE LAYER ===== */
+@layer base {
+  html {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: #08080c;
+    color: #e0e0e0;
+    scrollbar-width: thin;
+    scrollbar-color: #39ff14 #111118;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Custom scrollbar for Webkit browsers */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #111118;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(57, 255, 20, 0.3);
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(57, 255, 20, 0.5);
+  }
+
+  /* Selection */
+  ::selection {
+    background: rgba(57, 255, 20, 0.25);
+    color: #fff;
+  }
+
+  /* Mono for code-like elements */
+  code, pre, .font-mono, input, select, textarea {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+}
+
+/* ===== COMPONENT LAYER ===== */
+@layer components {
+
+  /* --- Matrix Photo Effect --- */
+  .matrix-photo {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(57, 255, 20, 0.15);
+    border-radius: 6px;
+    box-shadow: 0 0 20px rgba(57, 255, 20, 0.08);
+  }
+  .matrix-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(100%) brightness(0.6) sepia(100%) hue-rotate(70deg) saturate(500%) contrast(1.1);
+  }
+  .matrix-photo::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.1) 0px,
+      rgba(0, 0, 0, 0.1) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+  .matrix-photo::before {
+    content: '';
+    position: absolute;
+    top: -100%;
+    left: 0;
+    right: 0;
+    bottom: -100%;
+    background: linear-gradient(
+      transparent 0%,
+      rgba(57, 255, 20, 0.03) 50%,
+      transparent 100%
+    );
+    animation: scanline 8s linear infinite;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* --- Neon Card --- */
+  .neon-card {
+    background: rgba(14, 14, 22, 0.65);
+    border: 1px solid rgba(57, 255, 20, 0.07);
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+  }
+  .neon-card:hover {
+    border-color: rgba(57, 255, 20, 0.15);
+    box-shadow: 0 4px 24px rgba(57, 255, 20, 0.06);
+  }
+
+  /* --- Neon Button --- */
+  .neon-btn {
+    @apply px-5 py-2.5 text-sm tracking-wider font-medium;
+    font-family: 'Inter', sans-serif;
+    background: transparent;
+    border: 1px solid rgba(57, 255, 20, 0.3);
+    color: #39ff14;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .neon-btn:hover {
+    background: #39ff14;
+    color: #08080c;
+    box-shadow: 0 0 20px rgba(57, 255, 20, 0.3), 0 0 40px rgba(57, 255, 20, 0.1);
+    border-color: #39ff14;
+  }
+  .neon-btn:active {
+    transform: scale(0.98);
+  }
+  .neon-btn:disabled {
+    @apply opacity-30 cursor-not-allowed;
+  }
+
+  /* --- Neon Input --- */
+  .neon-input {
+    @apply w-full px-4 py-2.5 text-sm;
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(8, 8, 12, 0.8);
+    border: 1px solid rgba(57, 255, 20, 0.1);
+    border-radius: 6px;
+    color: #39ff14;
+    outline: none;
+    transition: all 0.2s;
+    caret-color: #39ff14;
+  }
+  .neon-input::placeholder {
+    color: rgba(57, 255, 20, 0.25);
+  }
+  .neon-input:focus {
+    border-color: rgba(57, 255, 20, 0.35);
+    box-shadow: 0 0 0 3px rgba(57, 255, 20, 0.06);
+  }
+
+  /* --- Service Card (right panel) --- */
+  .service-card {
+    background: rgba(14, 14, 22, 0.5);
+    border: 1px solid rgba(57, 255, 20, 0.06);
+    border-radius: 6px;
+    padding: 0.75rem;
+    transition: all 0.3s;
+  }
+  .service-card:hover {
+    border-color: rgba(57, 255, 20, 0.12);
+    box-shadow: 0 2px 12px rgba(57, 255, 20, 0.04);
+  }
+
+  /* --- Bank Account Card --- */
+  .bank-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid rgba(57, 255, 20, 0.06);
+    transition: all 0.2s;
+  }
+  .bank-card.bbva {
+    background: linear-gradient(135deg, rgba(14,14,22,0.8) 0%, rgba(13,31,74,0.5) 100%);
+    border-color: rgba(26,58,122,0.3);
+  }
+  .bank-card.plata {
+    background: linear-gradient(135deg, rgba(14,14,22,0.8) 0%, rgba(74,26,13,0.5) 100%);
+    border-color: rgba(122,58,26,0.3);
+  }
+  .bank-card.nu {
+    background: linear-gradient(135deg, rgba(14,14,22,0.8) 0%, rgba(45,13,74,0.5) 100%);
+    border-color: rgba(90,26,122,0.3);
+  }
+  .bank-card.paypal {
+    background: linear-gradient(135deg, rgba(14,14,22,0.8) 0%, rgba(13,42,74,0.5) 100%);
+    border-color: rgba(26,74,122,0.3);
+  }
+
+  /* --- Transport Cupo Indicator --- */
+  .cupo {
+    @apply w-3.5 h-3.5 rounded-full inline-block;
+  }
+  .cupo.available {
+    @apply bg-wired-neon;
+    box-shadow: 0 0 6px #39ff14;
+  }
+  .cupo.occupied {
+    @apply bg-wired-danger opacity-70;
+    box-shadow: 0 0 6px rgba(255, 51, 51, 0.5);
+  }
+
+  /* --- Progress Bar (Tesoreria) --- */
+  .progress-bar {
+    @apply h-2 rounded-full overflow-hidden;
+    background: rgba(57, 255, 20, 0.08);
+  }
+  .progress-bar-fill {
+    @apply h-full rounded-full transition-all duration-700 ease-out;
+    background: linear-gradient(90deg, #0d3b0d 0%, #39ff14 100%);
+    box-shadow: 0 0 10px rgba(57, 255, 20, 0.4);
+  }
+
+  /* --- Notification Item --- */
+  .notification-item {
+    @apply flex items-center gap-3 p-3 border-b;
+    border-color: rgba(57, 255, 20, 0.04);
+    @apply transition-all duration-200;
+  }
+  .notification-item:hover {
+    background: rgba(57, 255, 20, 0.02);
+  }
+  .notification-item:last-child {
+    @apply border-b-0;
+  }
+
+  /* --- Glowing Text (subtle) --- */
+  .glow-text {
+    text-shadow: 0 0 8px rgba(57, 255, 20, 0.3);
+  }
+  .glow-text-sm {
+    text-shadow: 0 0 4px rgba(57, 255, 20, 0.2);
+  }
+  .glow-amber {
+    text-shadow: 0 0 6px rgba(255, 191, 0, 0.25);
+  }
+
+  /* --- Status Dot --- */
+  .status-dot {
+    @apply w-2 h-2 rounded-full inline-block;
+  }
+  .status-dot.online {
+    @apply bg-wired-neon;
+    box-shadow: 0 0 5px #39ff14;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .status-dot.offline {
+    @apply bg-wired-danger;
+  }
+}
+
+/* ===== UTILITY LAYER ===== */
+@layer utilities {
+  .text-shadow-none {
+    text-shadow: none;
+  }
+}
+
+/* ===== ANIMATIONS (outside layers for global access) ===== */
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-right {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out both;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.35s ease-out both;
+}
+
+.animate-slide-right {
+  animation: slide-right 0.3s ease-out both;
+}
+
+/* ===== RESPONSIVE FALLBACKS ===== */
+/* Tailwind responsive variants may not be included in production builds  */
+/* These ensure consistent layout across breakpoints                       */
+
+@media (min-width: 640px) {
+  .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sm\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .sm\:table-cell  { display: table-cell; }
+  .sm\:col-span-2  { grid-column: span 2 / span 2; }
+}
+
+@media (min-width: 768px) {
+  .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .md\:hidden      { display: none !important; }
+  .md\:flex-row    { flex-direction: row; }
+}

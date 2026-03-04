@@ -1,0 +1,11 @@
+/* Voting page container */
+
+.voting-container {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.locked-banner {
+  border-color: rgba(255, 191, 0, 0.2);
+  background: rgba(255, 191, 0, 0.03);
+}

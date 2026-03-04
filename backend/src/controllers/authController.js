@@ -61,4 +61,38 @@ const login = async (req, res) => {
     }
 };
 
-module.exports = { register, login };
+const changePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ message: 'Se requieren la contraseña actual y la nueva.' });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({ message: 'La nueva contraseña debe tener al menos 6 caracteres.' });
+        }
+
+        const user = await User.findByPk(req.user.id);
+        if (!user) {
+            return res.status(404).json({ message: 'Usuario no encontrado.' });
+        }
+
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'La contraseña actual es incorrecta.' });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+        await user.save();
+
+        res.status(200).json({ message: 'Contraseña actualizada exitosamente.' });
+    } catch (error) {
+        console.error('[Auth Error]', error);
+        res.status(500).json({ message: 'Error al cambiar la contraseña.' });
+    }
+};
+
+// No olvides exportarlo:
+module.exports = { register, login, changePassword };
