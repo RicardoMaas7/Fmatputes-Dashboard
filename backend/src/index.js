@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 require('dotenv').config();
 
 // Importar configuración de BD y Modelos (centralizado con asociaciones)
@@ -42,6 +43,9 @@ const authLimiter = rateLimit({
 // ── Body parsers ──────────────────────────────────────────────────
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// ── Archivos estáticos (uploads) ──────────────────────────────────
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // ── Healthcheck ───────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {

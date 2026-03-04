@@ -23,6 +23,11 @@ const TransportSeat = sequelize.define('TransportSeat', {
     defaultValue: 0,
     field: 'pending_balance',
   },
+  priority: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: null,
+  },
 }, {
   tableName: 'transport_seats',
   timestamps: true,

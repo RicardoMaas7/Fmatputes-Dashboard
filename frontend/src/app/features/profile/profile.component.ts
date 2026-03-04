@@ -16,8 +16,10 @@ import { User } from '../../shared/models';
 export class ProfileComponent implements OnInit {
   loading = true;
   saving = false;
+  uploadingPhoto = false;
   user: User | null = null;
   msg: { text: string; type: 'ok' | 'err' } | null = null;
+  photoPreview: string | null = null;
 
   form = {
     displayName: '',
@@ -91,5 +93,50 @@ export class ProfileComponent implements OnInit {
         setTimeout(() => (this.passwordMsg = null), 4000);
       },
     });
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    // Preview
+    const reader = new FileReader();
+    reader.onload = () => (this.photoPreview = reader.result as string);
+    reader.readAsDataURL(file);
+
+    // Upload
+    this.uploadingPhoto = true;
+    const formData = new FormData();
+    formData.append('photo', file);
+
+    this.http.post<User>(`${environment.apiUrl}/users/me/photo`, formData).subscribe({
+      next: (updated) => {
+        this.uploadingPhoto = false;
+        this.user = { ...this.user!, ...updated } as User;
+        this.form.profilePhotoUrl = updated.profilePhotoUrl || '';
+        this.photoPreview = null;
+        this.msg = { text: 'Foto de perfil actualizada.', type: 'ok' };
+        setTimeout(() => (this.msg = null), 4000);
+      },
+      error: (e) => {
+        this.uploadingPhoto = false;
+        this.photoPreview = null;
+        this.msg = { text: e.error?.message || 'Error al subir foto.', type: 'err' };
+        setTimeout(() => (this.msg = null), 4000);
+      },
+    });
+  }
+
+  getPhotoUrl(): string {
+    if (this.photoPreview) return this.photoPreview;
+    if (this.form.profilePhotoUrl) {
+      // If it's a relative path from our backend, prepend the API base
+      if (this.form.profilePhotoUrl.startsWith('/uploads/')) {
+        return environment.apiUrl.replace('/api', '') + this.form.profilePhotoUrl;
+      }
+      return this.form.profilePhotoUrl;
+    }
+    return '';
   }
 }

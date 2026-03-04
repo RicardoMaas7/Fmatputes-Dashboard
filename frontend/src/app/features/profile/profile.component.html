@@ -13,14 +13,30 @@
     <!-- LEFT: Preview -->
     <div class="neon-card p-6 flex flex-col items-center gap-4">
       <!-- Photo Preview -->
-      <div class="w-32 h-32 rounded-full overflow-hidden border-2 border-wired-neon/30">
-        <img *ngIf="form.profilePhotoUrl"
-             [src]="form.profilePhotoUrl"
-             alt="Profile"
-             class="w-full h-full object-cover matrix-photo" />
-        <div *ngIf="!form.profilePhotoUrl"
-             class="w-full h-full flex items-center justify-center bg-wired-dim text-wired-neon text-4xl">
-          {{ (form.displayName || user.username).charAt(0).toUpperCase() }}
+      <div class="relative group">
+        <div class="w-32 h-32 rounded-full overflow-hidden border-2 border-wired-neon/30">
+          <img *ngIf="getPhotoUrl()"
+               [src]="getPhotoUrl()"
+               alt="Profile"
+               class="w-full h-full object-cover matrix-photo" />
+          <div *ngIf="!getPhotoUrl()"
+               class="w-full h-full flex items-center justify-center bg-wired-dim text-wired-neon text-4xl">
+            {{ (form.displayName || user.username).charAt(0).toUpperCase() }}
+          </div>
+        </div>
+        <!-- Upload overlay -->
+        <label class="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+          <div class="text-center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#39ff14" stroke-width="2" class="mx-auto mb-1">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <span class="text-[9px] text-wired-neon">CAMBIAR</span>
+          </div>
+          <input type="file" accept="image/*" class="hidden" (change)="onFileSelected($event)" />
+        </label>
+        <!-- Uploading spinner -->
+        <div *ngIf="uploadingPhoto" class="absolute inset-0 flex items-center justify-center bg-black/70 rounded-full">
+          <span class="text-wired-neon text-xs animate-pulse">Subiendo...</span>
         </div>
       </div>
 
@@ -62,9 +78,19 @@
         </div>
 
         <div>
-          <label class="text-[10px] text-wired-dim-light uppercase tracking-wider block mb-1">URL foto de perfil</label>
-          <input [(ngModel)]="form.profilePhotoUrl" class="neon-input text-sm w-full" placeholder="https://..." />
-          <p class="text-[10px] text-wired-dim-light mt-1">La foto se mostrará con efecto matrix automáticamente</p>
+          <label class="text-[10px] text-wired-dim-light uppercase tracking-wider block mb-1">Foto de perfil</label>
+          <div class="flex items-center gap-2">
+            <label class="neon-btn text-[10px] px-3 py-1.5 cursor-pointer flex items-center gap-1.5" [class.opacity-50]="uploadingPhoto">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              {{ uploadingPhoto ? 'SUBIENDO...' : 'SUBIR IMAGEN' }}
+              <input type="file" accept="image/*" class="hidden" (change)="onFileSelected($event)" [disabled]="uploadingPhoto" />
+            </label>
+            <span class="text-[10px] text-wired-dim-light">o</span>
+            <input [(ngModel)]="form.profilePhotoUrl" class="neon-input text-xs flex-1" placeholder="URL https://..." />
+          </div>
+          <p class="text-[10px] text-wired-dim-light mt-1">Sube una imagen o pega una URL. Máx 5MB (jpg, png, webp, gif)</p>
         </div>
 
         <button (click)="save()" [disabled]="saving"

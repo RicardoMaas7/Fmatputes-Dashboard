@@ -35,6 +35,14 @@ export const routes: Routes = [
         loadComponent: () => import('./features/team/team.component').then(m => m.TeamComponent),
       },
       {
+        path: 'calendar',
+        loadComponent: () => import('./features/calendar/calendar.component').then(m => m.CalendarComponent),
+      },
+      {
+        path: 'transport',
+        loadComponent: () => import('./features/transport/transport.component').then(m => m.TransportComponent),
+      },
+      {
         path: 'member/:id',
         loadComponent: () => import('./features/member-profile/member-profile.component').then(m => m.MemberProfileComponent),
       },

@@ -123,3 +123,24 @@
 .slider-container {
   position: relative;
 }
+
+.slider-ticks {
+  position: relative;
+  height: 14px;
+  margin-top: 2px;
+}
+
+.slider-ticks span {
+  position: absolute;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.35);
+  transform: translateX(-50%);
+}
+
+.slider-ticks span:first-child {
+  transform: translateX(0);
+}
+
+.slider-ticks span:last-child {
+  transform: translateX(-100%);
+}

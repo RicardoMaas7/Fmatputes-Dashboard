@@ -1,4 +1,6 @@
 const bcrypt = require('bcryptjs');
+const path = require('path');
+const fs = require('fs');
 const { User, BankAccount, SharedService, UserServiceDebt } = require('../models');
 
 // GET /api/users — List all users
@@ -152,4 +154,35 @@ const deleteUser = async (req, res) => {
   }
 };
 
-module.exports = { getAllUsers, getMe, getUserById, createUser, updateUser, deleteUser };
+module.exports = { getAllUsers, getMe, getUserById, createUser, updateUser, deleteUser, uploadPhoto };
+
+// POST /api/users/me/photo — Upload profile photo
+const uploadPhoto = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No se envió ningún archivo.' });
+    }
+
+    const user = await User.findByPk(req.user.id);
+    if (!user) return res.status(404).json({ message: 'Usuario no encontrado.' });
+
+    // Delete old file if it was a local upload
+    if (user.profilePhotoUrl && user.profilePhotoUrl.startsWith('/uploads/')) {
+      const oldPath = path.join(__dirname, '../..', user.profilePhotoUrl);
+      if (fs.existsSync(oldPath)) {
+        fs.unlinkSync(oldPath);
+      }
+    }
+
+    // Save relative URL
+    const photoUrl = `/uploads/avatars/${req.file.filename}`;
+    user.profilePhotoUrl = photoUrl;
+    await user.save();
+
+    const { password: _, ...userData } = user.get({ plain: true });
+    res.json(userData);
+  } catch (error) {
+    console.error('[Users] Error uploading photo:', error);
+    res.status(500).json({ message: 'Error al subir foto de perfil.' });
+  }
+};

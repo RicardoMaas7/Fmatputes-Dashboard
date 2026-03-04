@@ -108,4 +108,37 @@ export class DashboardService {
   getReminders(): Observable<Reminder[]> {
     return this.http.get<Reminder[]>(`${this.apiUrl}/reminders`);
   }
+
+  getAllReminders(): Observable<Reminder[]> {
+    return this.http.get<Reminder[]>(`${this.apiUrl}/reminders/all`);
+  }
+
+  createReminder(data: { title: string; message?: string; type?: string; expiresAt?: string }): Observable<Reminder> {
+    return this.http.post<Reminder>(`${this.apiUrl}/reminders`, data);
+  }
+
+  deleteReminder(id: string): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.apiUrl}/reminders/${id}`);
+  }
+
+  toggleReminder(id: string): Observable<Reminder> {
+    return this.http.put<Reminder>(`${this.apiUrl}/reminders/${id}/toggle`, {});
+  }
+
+  /* ─── Transport CRUD ─── */
+  createTransport(data: Partial<Transport>): Observable<Transport> {
+    return this.http.post<Transport>(`${this.apiUrl}/transport`, data);
+  }
+
+  updateTransport(id: string, data: Partial<Transport>): Observable<Transport> {
+    return this.http.put<Transport>(`${this.apiUrl}/transport/${id}`, data);
+  }
+
+  deleteTransport(id: string): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.apiUrl}/transport/${id}`);
+  }
+
+  updateTransportPriority(id: string, seatIds: string[]): Observable<{ message: string }> {
+    return this.http.put<{ message: string }>(`${this.apiUrl}/transport/${id}/priority`, { seatIds });
+  }
 }

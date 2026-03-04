@@ -31,16 +31,42 @@ interface BankAccount {
         <div class="min-w-0 flex-1">
           <p class="text-xs font-bold text-white leading-tight">{{ account.bankName }}</p>
           <p class="text-[10px] text-wired-dim-light font-mono tracking-wider mt-0.5">
-            {{ maskAccount(account.accountNumber) }}
+            {{ isRevealed(account) ? formatAccount(account.accountNumber) : maskAccount(account.accountNumber) }}
           </p>
         </div>
-        <button (click)="removeAccount(account)" 
-                class="text-red-500/30 hover:text-red-400 transition-colors flex-shrink-0"
-                title="Eliminar cuenta">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
+        <div class="flex items-center gap-1 flex-shrink-0">
+          <!-- Toggle reveal -->
+          <button (click)="toggleReveal(account)" 
+                  class="text-wired-dim-light hover:text-wired-neon transition-colors p-0.5"
+                  [title]="isRevealed(account) ? 'Ocultar' : 'Mostrar'">
+            <svg *ngIf="!isRevealed(account)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+            <svg *ngIf="isRevealed(account)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+              <line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+          </button>
+          <!-- Copy -->
+          <button (click)="copyAccount(account)" 
+                  class="text-wired-dim-light hover:text-wired-neon transition-colors p-0.5"
+                  [title]="copiedId === account.id ? '¡Copiado!' : 'Copiar'">
+            <svg *ngIf="copiedId !== account.id" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            <svg *ngIf="copiedId === account.id" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#39ff14" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </button>
+          <!-- Delete -->
+          <button (click)="removeAccount(account)" 
+                  class="text-red-500/30 hover:text-red-400 transition-colors p-0.5"
+                  title="Eliminar cuenta">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div *ngIf="accounts.length === 0 && !showAddForm" 
@@ -81,12 +107,41 @@ export class BankAccountsComponent {
 
   showAddForm = false;
   newAccount = { bankName: '', accountNumber: '' };
+  revealedIds = new Set<string>();
+  copiedId: string | null = null;
 
   constructor(
     private sanitizer: DomSanitizer,
     private dashboard: DashboardService,
     private modal: ConfirmModalService,
   ) {}
+
+  isRevealed(account: BankAccount): boolean {
+    return this.revealedIds.has(account.id || '');
+  }
+
+  toggleReveal(account: BankAccount): void {
+    const id = account.id || '';
+    if (this.revealedIds.has(id)) {
+      this.revealedIds.delete(id);
+    } else {
+      this.revealedIds.add(id);
+    }
+  }
+
+  formatAccount(num: string): string {
+    if (!num) return '';
+    const clean = num.replace(/\s/g, '');
+    return clean.match(/.{1,4}/g)?.join(' ') || clean;
+  }
+
+  copyAccount(account: BankAccount): void {
+    const num = account.accountNumber?.replace(/\s/g, '') || '';
+    navigator.clipboard.writeText(num).then(() => {
+      this.copiedId = account.id || null;
+      setTimeout(() => (this.copiedId = null), 2000);
+    });
+  }
 
   addAccount(): void {
     if (!this.newAccount.bankName || !this.newAccount.accountNumber) return;

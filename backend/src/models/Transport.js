@@ -11,6 +11,11 @@ const Transport = sequelize.define('Transport', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  ownerId: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    field: 'owner_id',
+  },
   driverName: {
     type: DataTypes.STRING,
     allowNull: true,

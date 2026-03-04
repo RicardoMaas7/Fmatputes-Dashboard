@@ -36,6 +36,10 @@ UserServiceDebt.belongsTo(SharedService, { foreignKey: 'service_id', as: 'servic
 Transport.hasMany(TransportSeat, { foreignKey: 'transport_id', as: 'seats' });
 TransportSeat.belongsTo(Transport, { foreignKey: 'transport_id', as: 'transport' });
 
+// User <-> Transport (owner)
+User.hasMany(Transport, { foreignKey: 'owner_id', as: 'ownedTransports' });
+Transport.belongsTo(User, { foreignKey: 'owner_id', as: 'owner' });
+
 // User <-> TransportSeat
 User.hasMany(TransportSeat, { foreignKey: 'user_id', as: 'transportSeats' });
 TransportSeat.belongsTo(User, { foreignKey: 'user_id', as: 'user' });

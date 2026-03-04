@@ -49,6 +49,8 @@ export interface UserServiceDebt {
 export interface Transport {
   id: string;
   name: string;
+  ownerId: string | null;
+  owner?: Pick<User, 'id' | 'username' | 'displayName'>;
   driverName: string | null;
   paradero: string | null;
   departureMorning: string | null;
@@ -67,6 +69,7 @@ export interface TransportSeat {
   transportId: string;
   userId: string;
   pendingBalance: number;
+  priority: number | null;
   user?: Pick<User, 'id' | 'username' | 'displayName'>;
   transport?: Transport;
 }

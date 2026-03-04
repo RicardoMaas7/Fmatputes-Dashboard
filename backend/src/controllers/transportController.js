@@ -1,19 +1,30 @@
 const { Transport, TransportSeat, User } = require('../models');
 const { createNotification } = require('../services/notificationHelper');
 
-// GET /api/transport — All transports with seats
+// GET /api/transport — All transports with seats + owner info
 const getAllTransports = async (req, res) => {
   try {
     const transports = await Transport.findAll({
       where: { isActive: true },
-      include: [{
-        association: 'seats',
-        include: [{ association: 'user', attributes: ['id', 'username', 'displayName'] }],
-      }],
+      include: [
+        {
+          association: 'seats',
+          include: [{ association: 'user', attributes: ['id', 'username', 'displayName'] }],
+        },
+        {
+          association: 'owner',
+          attributes: ['id', 'username', 'displayName'],
+        },
+      ],
+      order: [['created_at', 'DESC']],
     });
 
     const result = transports.map((t) => {
       const data = t.get({ plain: true });
+      // Sort seats by priority (lower = higher priority)
+      if (data.seats) {
+        data.seats.sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999));
+      }
       return {
         ...data,
         occupiedSeats: data.seats.length,
@@ -29,7 +40,7 @@ const getAllTransports = async (req, res) => {
   }
 };
 
-// POST /api/transport — Create transport (admin)
+// POST /api/transport — Create transport (any authenticated user becomes owner)
 const createTransport = async (req, res) => {
   try {
     const { name, driverName, paradero, departureMorning, returnMorning, totalSeats } = req.body;
@@ -37,6 +48,7 @@ const createTransport = async (req, res) => {
 
     const transport = await Transport.create({
       name,
+      ownerId: req.user.id,
       driverName: driverName || null,
       paradero: paradero || null,
       departureMorning: departureMorning || null,
@@ -52,11 +64,16 @@ const createTransport = async (req, res) => {
   }
 };
 
-// PUT /api/transport/:id — Update transport (admin)
+// PUT /api/transport/:id — Update transport (owner or admin)
 const updateTransport = async (req, res) => {
   try {
     const transport = await Transport.findByPk(req.params.id);
     if (!transport) return res.status(404).json({ message: 'Transporte no encontrado.' });
+
+    // Only owner or admin can update
+    if (transport.ownerId !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Solo el dueño o un admin puede editar este transporte.' });
+    }
 
     const { name, driverName, paradero, departureMorning, returnMorning, totalSeats } = req.body;
     if (name !== undefined) transport.name = name;
@@ -71,6 +88,57 @@ const updateTransport = async (req, res) => {
   } catch (error) {
     console.error('[Transport] Error actualizando:', error);
     res.status(500).json({ message: 'Error al actualizar transporte.' });
+  }
+};
+
+// DELETE /api/transport/:id — Delete transport (owner or admin)
+const deleteTransport = async (req, res) => {
+  try {
+    const transport = await Transport.findByPk(req.params.id);
+    if (!transport) return res.status(404).json({ message: 'Transporte no encontrado.' });
+
+    if (transport.ownerId !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Solo el dueño o un admin puede eliminar este transporte.' });
+    }
+
+    // Delete associated seats first
+    await TransportSeat.destroy({ where: { transportId: transport.id } });
+    await transport.destroy();
+
+    res.json({ message: 'Transporte eliminado.' });
+  } catch (error) {
+    console.error('[Transport] Error eliminando:', error);
+    res.status(500).json({ message: 'Error al eliminar transporte.' });
+  }
+};
+
+// PUT /api/transport/:id/priority — Owner reorders passenger priority
+const updatePriority = async (req, res) => {
+  try {
+    const transport = await Transport.findByPk(req.params.id);
+    if (!transport) return res.status(404).json({ message: 'Transporte no encontrado.' });
+
+    if (transport.ownerId !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Solo el dueño puede reordenar prioridades.' });
+    }
+
+    // Expect { seatIds: ['id1', 'id2', ...] } in order of priority
+    const { seatIds } = req.body;
+    if (!Array.isArray(seatIds)) {
+      return res.status(400).json({ message: 'seatIds debe ser un array.' });
+    }
+
+    // Update priority for each seat
+    await Promise.all(
+      seatIds.map((seatId, index) =>
+        TransportSeat.update({ priority: index + 1 }, { where: { id: seatId, transportId: transport.id } })
+      )
+    );
+
+    res.json({ message: 'Prioridades actualizadas.' });
+  } catch (error) {
+    console.error('[Transport] Error actualizando prioridad:', error);
+    res.status(500).json({ message: 'Error al actualizar prioridades.' });
   }
 };
 
@@ -129,4 +197,4 @@ const cancelSeat = async (req, res) => {
   }
 };
 
-module.exports = { getAllTransports, createTransport, updateTransport, reserveSeat, cancelSeat };
+module.exports = { getAllTransports, createTransport, updateTransport, deleteTransport, reserveSeat, cancelSeat, updatePriority };

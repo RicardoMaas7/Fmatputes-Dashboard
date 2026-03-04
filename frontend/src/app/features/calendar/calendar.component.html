@@ -1,0 +1,153 @@
+<div class="calendar-container p-6 animate-fade-in">
+  <h2 class="text-xl text-wired-neon glow-text uppercase tracking-widest mb-1">
+    <span class="text-wired-amber">&gt;</span> Calendario
+  </h2>
+  <p class="text-wired-dim-light text-xs tracking-wide mb-6">Recordatorios y eventos del grupo</p>
+
+  <!-- LOADING -->
+  <div *ngIf="loading" class="flex items-center justify-center py-20">
+    <span class="text-wired-neon animate-pulse text-sm tracking-widest">[ CARGANDO... ]</span>
+  </div>
+
+  <div *ngIf="!loading" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- CALENDAR GRID -->
+    <div class="lg:col-span-2">
+      <div class="neon-card p-4">
+        <!-- Month Nav -->
+        <div class="flex items-center justify-between mb-4">
+          <button (click)="prevMonth()" class="text-wired-dim-light hover:text-wired-neon transition-colors p-1">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div class="text-center">
+            <span class="text-sm font-bold text-wired-neon uppercase tracking-wider">
+              {{ MONTHS[currentMonth] }} {{ currentYear }}
+            </span>
+            <button (click)="goToToday()" class="text-[10px] text-wired-dim-light hover:text-wired-amber ml-2 underline">Hoy</button>
+          </div>
+          <button (click)="nextMonth()" class="text-wired-dim-light hover:text-wired-neon transition-colors p-1">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+
+        <!-- Day Headers -->
+        <div class="grid grid-cols-7 gap-px mb-1">
+          <div *ngFor="let d of DAYS" class="text-center text-[10px] text-wired-dim-light uppercase tracking-wider py-1">{{ d }}</div>
+        </div>
+
+        <!-- Calendar Grid -->
+        <div *ngFor="let week of weeks" class="grid grid-cols-7 gap-px">
+          <div *ngFor="let day of week"
+               class="cal-day"
+               [class.other-month]="!day.isCurrentMonth"
+               [class.today]="day.isToday"
+               [class.selected]="selectedDay === day"
+               [class.has-reminders]="day.reminders.length > 0"
+               (click)="selectDay(day)">
+            <span class="day-number">{{ day.day }}</span>
+            <div *ngIf="day.reminders.length > 0" class="dots">
+              <span *ngFor="let r of day.reminders.slice(0, 3)"
+                    class="dot"
+                    [ngClass]="getDotColor(r.type)"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add button (admin) -->
+      <button *ngIf="isAdmin"
+              (click)="openAddForm(selectedDay || undefined)"
+              class="neon-btn w-full py-2 text-sm mt-4 flex items-center justify-center gap-2">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        AGREGAR RECORDATORIO
+      </button>
+    </div>
+
+    <!-- SIDEBAR: Selected day details / Add form -->
+    <div class="lg:col-span-1">
+      <!-- Add form -->
+      <div *ngIf="showAddForm && isAdmin" class="neon-card p-4 mb-4 animate-fade-in">
+        <h3 class="text-sm text-wired-amber uppercase tracking-wider mb-3">Nuevo Recordatorio</h3>
+        <div class="space-y-3">
+          <div>
+            <label class="text-[10px] text-wired-dim-light uppercase tracking-wider block mb-1">Título *</label>
+            <input [(ngModel)]="newReminder.title" class="neon-input text-xs w-full" placeholder="Título del recordatorio" />
+          </div>
+          <div>
+            <label class="text-[10px] text-wired-dim-light uppercase tracking-wider block mb-1">Mensaje</label>
+            <textarea [(ngModel)]="newReminder.message" class="neon-input text-xs w-full" rows="2" placeholder="Descripción opcional..."></textarea>
+          </div>
+          <div>
+            <label class="text-[10px] text-wired-dim-light uppercase tracking-wider block mb-1">Tipo</label>
+            <select [(ngModel)]="newReminder.type" class="neon-input text-xs w-full" style="background: rgba(14,14,20,0.9);">
+              <option value="info">Info</option>
+              <option value="warning">Aviso</option>
+              <option value="urgent">Urgente</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[10px] text-wired-dim-light uppercase tracking-wider block mb-1">Fecha</label>
+            <input [(ngModel)]="newReminder.expiresAt" type="date" class="neon-input text-xs w-full" />
+          </div>
+          <div class="flex gap-2">
+            <button (click)="saveReminder()" [disabled]="saving || !newReminder.title.trim()"
+                    class="neon-btn text-xs px-4 py-1.5 flex-1" [class.opacity-50]="saving || !newReminder.title.trim()">
+              {{ saving ? 'GUARDANDO...' : 'GUARDAR' }}
+            </button>
+            <button (click)="cancelAdd()" class="text-xs text-wired-dim-light hover:text-white px-3">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selected day reminders -->
+      <div *ngIf="selectedDay" class="neon-card p-4 animate-fade-in">
+        <h3 class="text-sm text-wired-amber uppercase tracking-wider mb-3">
+          {{ selectedDay.day }} {{ MONTHS[selectedDay.date.getMonth()] }}
+        </h3>
+
+        <div *ngIf="selectedDay.reminders.length === 0" class="text-center text-wired-dim-light text-[10px] py-4 opacity-60">
+          Sin recordatorios para este día
+        </div>
+
+        <div *ngFor="let r of selectedDay.reminders" class="reminder-item border-l-2 pl-3 py-2 mb-2" [ngClass]="getTypeColor(r.type)">
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex-1 min-w-0">
+              <div class="text-xs font-bold text-white" [class.line-through]="!r.isActive && !(r.is_active)">{{ r.title }}</div>
+              <div *ngIf="r.message" class="text-[10px] text-wired-dim-light mt-0.5">{{ r.message }}</div>
+              <span class="inline-block text-[9px] px-1.5 py-0.5 rounded mt-1 uppercase" [ngClass]="getTypeBadge(r.type)">{{ r.type }}</span>
+            </div>
+            <div *ngIf="isAdmin" class="flex items-center gap-1 flex-shrink-0">
+              <button (click)="toggleReminder(r); $event.stopPropagation()" class="text-wired-dim-light hover:text-wired-amber transition-colors p-0.5" title="Activar/Desactivar">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path *ngIf="r.isActive || r.is_active" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle *ngIf="r.isActive || r.is_active" cx="12" cy="12" r="3"/>
+                  <line *ngIf="!r.isActive && !r.is_active" x1="1" y1="1" x2="23" y2="23"/><path *ngIf="!r.isActive && !r.is_active" d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                </svg>
+              </button>
+              <button (click)="deleteReminder(r); $event.stopPropagation()" class="text-red-500/50 hover:text-red-400 transition-colors p-0.5" title="Eliminar">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upcoming reminders list -->
+      <div class="neon-card p-4 mt-4">
+        <h3 class="text-sm text-wired-neon uppercase tracking-wider mb-3">Próximos recordatorios</h3>
+        <div *ngIf="reminders.length === 0" class="text-center text-wired-dim-light text-[10px] py-4 opacity-60">
+          No hay recordatorios
+        </div>
+        <div *ngFor="let r of reminders.slice(0, 8)" class="reminder-list-item flex items-center gap-2 py-1.5 border-b border-wired-neon/5 last:border-0">
+          <span class="w-1.5 h-1.5 rounded-full flex-shrink-0" [ngClass]="getDotColor(r.type)"></span>
+          <div class="flex-1 min-w-0">
+            <div class="text-[11px] text-white truncate">{{ r.title }}</div>
+            <div class="text-[9px] text-wired-dim-light">
+              {{ (r.expiresAt || r.expires_at)?.substring(0, 10) || 'Sin fecha' }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
