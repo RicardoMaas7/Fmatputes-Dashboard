@@ -74,8 +74,8 @@ app.use('/api/teams', require('./routes/teamRoutes'));
 const startServer = async () => {
     await connectDB();
     
-    await sequelize.sync({ force: false }); 
-    console.log('[Base de Datos] Modelos sincronizados correctamente.');
+    await sequelize.sync({ alter: true }); 
+    console.log('[Base de Datos] Modelos sincronizados correctamente (alter).');
 
     // Auto-seed: datos iniciales si la BD está vacía
     const { User } = models;
