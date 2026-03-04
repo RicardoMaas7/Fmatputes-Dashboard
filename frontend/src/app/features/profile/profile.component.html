@@ -144,4 +144,15 @@
       </div>
     </div>
   </div>
+
+  <!-- Bank Accounts Section -->
+  <div *ngIf="!loading && user" class="mt-6">
+    <div class="neon-card p-6">
+      <h3 class="text-sm text-wired-amber uppercase tracking-wider mb-4">Cuentas Bancarias</h3>
+      <app-bank-accounts
+        [accounts]="bankAccounts"
+        mode="profile"
+      ></app-bank-accounts>
+    </div>
+  </div>
 </div>

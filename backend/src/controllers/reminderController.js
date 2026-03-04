@@ -1,5 +1,6 @@
 const { Op } = require('sequelize');
-const { Reminder, User } = require('../models');
+const { Reminder, User, Team, TeamMember } = require('../models');
+const { createNotification } = require('../services/notificationHelper');
 
 // GET /api/reminders — Get all active reminders (visible to all)
 const getReminders = async (req, res) => {
@@ -88,4 +89,28 @@ const toggleReminder = async (req, res) => {
   }
 };
 
-module.exports = { getReminders, getAllReminders, createReminder, deleteReminder, toggleReminder };
+module.exports = { getReminders, getAllReminders, createReminder, deleteReminder, toggleReminder, notifyTeam };
+
+// POST /api/reminders/:id/notify-team — Send reminder as notification to all members of a team
+const notifyTeam = async (req, res) => {
+  try {
+    const { teamId } = req.body;
+    if (!teamId) return res.status(400).json({ message: 'teamId es obligatorio.' });
+
+    const reminder = await Reminder.findByPk(req.params.id);
+    if (!reminder) return res.status(404).json({ message: 'Recordatorio no encontrado.' });
+
+    const members = await TeamMember.findAll({ where: { teamId } });
+    if (!members.length) return res.status(404).json({ message: 'El equipo no tiene miembros.' });
+
+    const notifPromises = members.map((m) =>
+      createNotification(m.userId, `📅 Recordatorio: ${reminder.title}${reminder.message ? ' — ' + reminder.message : ''}`, 'general')
+    );
+    await Promise.all(notifPromises);
+
+    res.json({ message: `Notificación enviada a ${members.length} miembro(s).`, count: members.length });
+  } catch (error) {
+    console.error('[Reminders] Error notifying team:', error);
+    res.status(500).json({ message: 'Error al notificar al equipo.' });
+  }
+};

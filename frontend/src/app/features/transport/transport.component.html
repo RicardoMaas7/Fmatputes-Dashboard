@@ -75,6 +75,26 @@
         <input type="number" [(ngModel)]="form.totalSeats" min="1" max="20" class="form-input w-24" />
       </div>
 
+      <!-- Stops / Paraderos -->
+      <div class="form-group">
+        <label>Paraderos</label>
+        <div *ngFor="let stop of formStops; let i = index" class="stop-row">
+          <input type="text" [(ngModel)]="stop.name" placeholder="Nombre del paradero" class="form-input flex-1" />
+          <input type="time" [(ngModel)]="stop.time" class="form-input stop-time" />
+          <button type="button" class="stop-remove" (click)="removeStop(i)" title="Quitar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <button type="button" class="btn-add-stop" (click)="addStop()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Agregar paradero
+        </button>
+      </div>
+
       <div class="modal-actions">
         <button class="btn-cancel" (click)="cancelForm()">Cancelar</button>
         <button class="btn-save" (click)="saveTransport()" [disabled]="saving">
@@ -161,9 +181,16 @@
           <span class="info-label">Conductor</span>
           <span class="info-value">{{ t.driverName }}</span>
         </div>
-        <div class="info-row" *ngIf="t.paradero">
+        <div class="info-row" *ngIf="t.paradero && (!t.stops || t.stops.length === 0)">
           <span class="info-label">Paradero</span>
           <span class="info-value">{{ t.paradero }}</span>
+        </div>
+        <div *ngIf="t.stops && t.stops.length > 0" class="stops-list">
+          <span class="info-label">Paraderos</span>
+          <div *ngFor="let stop of t.stops" class="stop-chip">
+            <span class="stop-name">{{ stop.name }}</span>
+            <span class="stop-time" *ngIf="stop.time">{{ stop.time }}</span>
+          </div>
         </div>
         <div class="info-row" *ngIf="t.departureMorning || t.returnMorning">
           <span class="info-label">Horario</span>

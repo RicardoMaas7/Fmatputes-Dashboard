@@ -6,6 +6,7 @@ const {
   createReminder,
   deleteReminder,
   toggleReminder,
+  notifyTeam,
 } = require('../controllers/reminderController');
 
 router.use(verifyToken);
@@ -18,5 +19,8 @@ router.get('/all', adminOnly, getAllReminders);
 router.post('/', adminOnly, createReminder);
 router.put('/:id/toggle', adminOnly, toggleReminder);
 router.delete('/:id', adminOnly, deleteReminder);
+
+// Notificar equipo: cualquier usuario autenticado
+router.post('/:id/notify-team', notifyTeam);
 
 module.exports = router;

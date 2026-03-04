@@ -575,3 +575,89 @@
     flex-wrap: wrap;
   }
 }
+
+/* ─── Stops in form ─── */
+.stop-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.stop-time {
+  width: 110px;
+  flex-shrink: 0;
+}
+
+.stop-remove {
+  background: rgba(255, 60, 60, 0.12);
+  border: 1px solid rgba(255, 60, 60, 0.3);
+  border-radius: 4px;
+  color: #ff4444;
+  padding: 0.3rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.stop-remove:hover {
+  background: rgba(255, 60, 60, 0.25);
+}
+
+.btn-add-stop {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.3rem;
+  padding: 0.3rem 0.7rem;
+  background: rgba(57, 255, 20, 0.08);
+  border: 1px dashed rgba(57, 255, 20, 0.3);
+  border-radius: 4px;
+  color: #39ff14;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-add-stop:hover {
+  background: rgba(57, 255, 20, 0.15);
+  border-color: rgba(57, 255, 20, 0.5);
+}
+
+/* ─── Stops in card ─── */
+.stops-list {
+  margin-bottom: 0.5rem;
+}
+
+.stops-list .info-label {
+  display: block;
+  font-size: 0.65rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.3rem;
+}
+
+.stop-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.5rem;
+  margin: 0.15rem 0.2rem 0.15rem 0;
+  background: rgba(57, 255, 20, 0.06);
+  border: 1px solid rgba(57, 255, 20, 0.15);
+  border-radius: 4px;
+  font-size: 0.7rem;
+}
+
+.stop-chip .stop-name {
+  color: #ccc;
+}
+
+.stop-chip .stop-time {
+  color: #ffbf00;
+  font-size: 0.65rem;
+  font-weight: 600;
+  width: auto;
+}

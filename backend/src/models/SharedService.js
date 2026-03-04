@@ -22,10 +22,25 @@ const SharedService = sequelize.define('SharedService', {
     defaultValue: 0,
     field: 'total_cost',
   },
+  perPersonCost: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+    field: 'per_person_cost',
+  },
   nextPaymentDate: {
     type: DataTypes.DATEONLY,
     allowNull: true,
     field: 'next_payment_date',
+  },
+  paymentDeadline: {
+    type: DataTypes.DATEONLY,
+    allowNull: true,
+    field: 'payment_deadline',
+  },
+  createdBy: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    field: 'created_by',
   },
   isActive: {
     type: DataTypes.BOOLEAN,

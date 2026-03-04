@@ -3,8 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DashboardService } from '../../shared/services/dashboard.service';
 import { AuthService } from '../../shared/services/auth.service';
+import { ToastService } from '../../shared/services/toast.service';
 import { ConfirmModalService } from '../../shared/services/confirm-modal.service';
-import { Reminder } from '../../shared/models';
+import { Reminder, Team } from '../../shared/models';
 
 interface CalendarDay {
   date: Date;
@@ -41,6 +42,11 @@ export class CalendarComponent implements OnInit {
 
   selectedDay: CalendarDay | null = null;
 
+  // Teams for "Remind team"
+  teams: Team[] = [];
+  notifyTeamId: string = '';
+  notifyingReminderId: string | null = null;
+
   readonly MONTHS = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
@@ -50,6 +56,7 @@ export class CalendarComponent implements OnInit {
   constructor(
     private dashboard: DashboardService,
     private authService: AuthService,
+    private toast: ToastService,
     private modal: ConfirmModalService,
   ) {}
 
@@ -59,6 +66,7 @@ export class CalendarComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadReminders();
+    this.dashboard.getTeams().subscribe({ next: (t) => (this.teams = t) });
   }
 
   loadReminders(): void {
@@ -245,5 +253,22 @@ export class CalendarComponent implements OnInit {
       case 'warning': return 'bg-yellow-500';
       default: return 'bg-blue-500';
     }
+  }
+
+  openNotifyTeam(reminderId: string): void {
+    this.notifyingReminderId = this.notifyingReminderId === reminderId ? null : reminderId;
+    this.notifyTeamId = '';
+  }
+
+  sendTeamNotification(reminderId: string): void {
+    if (!this.notifyTeamId) return;
+    this.dashboard.notifyTeam(reminderId, this.notifyTeamId).subscribe({
+      next: (res) => {
+        this.toast.show(res.message, 'success');
+        this.notifyingReminderId = null;
+        this.notifyTeamId = '';
+      },
+      error: () => this.toast.show('Error al notificar al equipo', 'error'),
+    });
   }
 }

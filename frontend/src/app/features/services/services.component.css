@@ -1,0 +1,98 @@
+/* ===== Services Page Styles ===== */
+:host {
+  display: block;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+}
+
+.service-card {
+  background: rgba(14, 14, 22, 0.6);
+  border: 1px solid rgba(57, 255, 20, 0.08);
+  border-radius: 10px;
+  padding: 1.25rem;
+  transition: border-color 0.25s, background 0.25s;
+  backdrop-filter: blur(6px);
+}
+.service-card:hover {
+  border-color: rgba(57, 255, 20, 0.2);
+  background: rgba(14, 14, 22, 0.8);
+}
+.service-card.inactive {
+  opacity: 0.5;
+}
+
+.service-icon-wrap {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(57, 255, 20, 0.06);
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.service-badge {
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+}
+.badge-active {
+  background: rgba(57, 255, 20, 0.1);
+  color: #39ff14;
+  border: 1px solid rgba(57, 255, 20, 0.2);
+}
+.badge-inactive {
+  background: rgba(255, 50, 50, 0.1);
+  color: #ff5555;
+  border: 1px solid rgba(255, 50, 50, 0.2);
+}
+.badge-mine {
+  background: rgba(255, 191, 0, 0.1);
+  color: #ffbf00;
+  border: 1px solid rgba(255, 191, 0, 0.2);
+}
+
+.cost-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  font-family: 'JetBrains Mono', monospace;
+}
+.cost-row strong {
+  color: white;
+}
+
+.pending-bar {
+  height: 3px;
+  border-radius: 3px;
+  background: rgba(57, 255, 20, 0.08);
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+.pending-fill {
+  height: 100%;
+  background: #39ff14;
+  border-radius: 3px;
+  box-shadow: 0 0 6px rgba(57, 255, 20, 0.4);
+  transition: width 0.5s ease-out;
+}
+.pending-fill.overdue {
+  background: #ff5555;
+  box-shadow: 0 0 6px rgba(255, 50, 50, 0.4);
+}
+
+.creator-label {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.25);
+  font-family: 'JetBrains Mono', monospace;
+}

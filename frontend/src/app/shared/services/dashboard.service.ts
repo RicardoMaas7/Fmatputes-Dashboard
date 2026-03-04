@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   User, BankAccount, SharedService, Transport, Treasury,
-  AppNotification, Reminder, VoteResult, RadarResponse
+  AppNotification, Reminder, VoteResult, RadarResponse, Team
 } from '../models';
 
 @Injectable({
@@ -33,6 +33,26 @@ export class DashboardService {
   /** Get all services with user debts */
   getServices(): Observable<SharedService[]> {
     return this.http.get<SharedService[]>(`${this.apiUrl}/services`);
+  }
+
+  /** Create a new service */
+  createService(data: Partial<SharedService>): Observable<SharedService> {
+    return this.http.post<SharedService>(`${this.apiUrl}/services`, data);
+  }
+
+  /** Update a service */
+  updateService(id: string, data: Partial<SharedService>): Observable<SharedService> {
+    return this.http.put<SharedService>(`${this.apiUrl}/services/${id}`, data);
+  }
+
+  /** Delete a service */
+  deleteService(id: string): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.apiUrl}/services/${id}`);
+  }
+
+  /** Mark a service as paid for current user */
+  markServicePaid(id: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/services/${id}/mark-paid`, {});
   }
 
   /** Get all transports with seats */
@@ -125,6 +145,10 @@ export class DashboardService {
     return this.http.put<Reminder>(`${this.apiUrl}/reminders/${id}/toggle`, {});
   }
 
+  notifyTeam(reminderId: string, teamId: string): Observable<{ message: string; count: number }> {
+    return this.http.post<{ message: string; count: number }>(`${this.apiUrl}/reminders/${reminderId}/notify-team`, { teamId });
+  }
+
   /* ─── Transport CRUD ─── */
   createTransport(data: Partial<Transport>): Observable<Transport> {
     return this.http.post<Transport>(`${this.apiUrl}/transport`, data);
@@ -140,5 +164,22 @@ export class DashboardService {
 
   updateTransportPriority(id: string, seatIds: string[]): Observable<{ message: string }> {
     return this.http.put<{ message: string }>(`${this.apiUrl}/transport/${id}/priority`, { seatIds });
+  }
+
+  /* ─── Teams ─── */
+  getTeams(): Observable<Team[]> {
+    return this.http.get<Team[]>(`${this.apiUrl}/teams`);
+  }
+
+  createTeam(data: { name: string; memberIds: string[] }): Observable<Team> {
+    return this.http.post<Team>(`${this.apiUrl}/teams`, data);
+  }
+
+  updateTeam(id: string, data: { name?: string; memberIds?: string[] }): Observable<Team> {
+    return this.http.put<Team>(`${this.apiUrl}/teams/${id}`, data);
+  }
+
+  deleteTeam(id: string): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.apiUrl}/teams/${id}`);
   }
 }

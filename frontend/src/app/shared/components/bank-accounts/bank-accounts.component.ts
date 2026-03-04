@@ -22,7 +22,10 @@ interface BankAccount {
         *ngFor="let account of accounts; let i = index"
         class="bank-card"
         [ngClass]="getBankClass(account.bankName)"
+        [class.cursor-pointer]="mode === 'dashboard'"
+        [class.hover-glow]="mode === 'dashboard'"
         [style.animation-delay]="(i * 100) + 'ms'"
+        (click)="mode === 'dashboard' && copyAccount(account)"
       >
         <div class="w-8 h-8 rounded flex items-center justify-center flex-shrink-0"
              [ngClass]="getIconBgClass(account.bankName)">
@@ -30,42 +33,50 @@ interface BankAccount {
         </div>
         <div class="min-w-0 flex-1">
           <p class="text-xs font-bold text-white leading-tight">{{ account.bankName }}</p>
-          <p class="text-[10px] text-wired-dim-light font-mono tracking-wider mt-0.5">
-            {{ isRevealed(account) ? formatAccount(account.accountNumber) : maskAccount(account.accountNumber) }}
+          <p class="text-[10px] font-mono tracking-wider mt-0.5"
+             [ngClass]="copiedId === account.id ? 'text-wired-neon' : 'text-wired-dim-light'">
+            <ng-container *ngIf="copiedId === account.id">¡COPIADO!</ng-container>
+            <ng-container *ngIf="copiedId !== account.id">
+              {{ mode === 'dashboard' ? formatAccount(account.accountNumber) : (isRevealed(account) ? formatAccount(account.accountNumber) : maskAccount(account.accountNumber)) }}
+            </ng-container>
           </p>
         </div>
         <div class="flex items-center gap-1 flex-shrink-0">
-          <!-- Toggle reveal -->
-          <button (click)="toggleReveal(account)" 
-                  class="text-wired-dim-light hover:text-wired-neon transition-colors p-0.5"
-                  [title]="isRevealed(account) ? 'Ocultar' : 'Mostrar'">
-            <svg *ngIf="!isRevealed(account)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-            </svg>
-            <svg *ngIf="isRevealed(account)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-              <line x1="1" y1="1" x2="23" y2="23"/>
-            </svg>
-          </button>
-          <!-- Copy -->
-          <button (click)="copyAccount(account)" 
-                  class="text-wired-dim-light hover:text-wired-neon transition-colors p-0.5"
-                  [title]="copiedId === account.id ? '¡Copiado!' : 'Copiar'">
-            <svg *ngIf="copiedId !== account.id" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-            </svg>
-            <svg *ngIf="copiedId === account.id" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#39ff14" stroke-width="2.5">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-          </button>
-          <!-- Delete -->
-          <button (click)="removeAccount(account)" 
-                  class="text-red-500/30 hover:text-red-400 transition-colors p-0.5"
-                  title="Eliminar cuenta">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
+          <!-- Dashboard mode: just a copy hint icon -->
+          <ng-container *ngIf="mode === 'dashboard'">
+            <span class="text-wired-dim-light text-[9px] opacity-50">CLICK PARA COPIAR</span>
+          </ng-container>
+          <!-- Profile mode: reveal, copy, delete -->
+          <ng-container *ngIf="mode === 'profile'">
+            <button (click)="toggleReveal(account); $event.stopPropagation()" 
+                    class="text-wired-dim-light hover:text-wired-neon transition-colors p-0.5"
+                    [title]="isRevealed(account) ? 'Ocultar' : 'Mostrar'">
+              <svg *ngIf="!isRevealed(account)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+              <svg *ngIf="isRevealed(account)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            </button>
+            <button (click)="copyAccount(account); $event.stopPropagation()" 
+                    class="text-wired-dim-light hover:text-wired-neon transition-colors p-0.5"
+                    [title]="copiedId === account.id ? '¡Copiado!' : 'Copiar'">
+              <svg *ngIf="copiedId !== account.id" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              <svg *ngIf="copiedId === account.id" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#39ff14" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </button>
+            <button (click)="removeAccount(account); $event.stopPropagation()" 
+                    class="text-red-500/30 hover:text-red-400 transition-colors p-0.5"
+                    title="Eliminar cuenta">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </ng-container>
         </div>
       </div>
 
@@ -74,8 +85,8 @@ interface BankAccount {
         SIN CUENTAS
       </div>
 
-      <!-- Add Account Form -->
-      <div *ngIf="showAddForm" class="p-3 border border-wired-neon/15 rounded animate-fade-in" style="background: rgba(10,10,10,0.8);">
+      <!-- Add Account Form (profile mode only) -->
+      <div *ngIf="showAddForm && mode === 'profile'" class="p-3 border border-wired-neon/15 rounded animate-fade-in" style="background: rgba(10,10,10,0.8);">
         <select [(ngModel)]="newAccount.bankName" class="neon-input text-xs w-full mb-2" style="background: rgba(14,14,20,0.9);">
           <option value="">Seleccionar banco...</option>
           <option value="BBVA">BBVA</option>
@@ -92,17 +103,24 @@ interface BankAccount {
         </div>
       </div>
 
-      <!-- Add Button -->
-      <button *ngIf="!showAddForm" 
+      <!-- Add Button (profile mode only) -->
+      <button *ngIf="!showAddForm && mode === 'profile'" 
               (click)="showAddForm = true"
               class="w-full text-center text-[10px] text-wired-neon/40 hover:text-wired-neon/80 py-2 border border-dashed border-wired-neon/10 hover:border-wired-neon/25 rounded transition-all">
         + Agregar cuenta
       </button>
     </div>
   `,
+  styles: [`
+    :host .hover-glow:hover {
+      box-shadow: 0 0 8px rgba(57, 255, 20, 0.15);
+      border-color: rgba(57, 255, 20, 0.25);
+    }
+  `],
 })
 export class BankAccountsComponent {
   @Input() accounts: BankAccount[] = [];
+  @Input() mode: 'dashboard' | 'profile' = 'dashboard';
   @Output() accountsChanged = new EventEmitter<void>();
 
   showAddForm = false;

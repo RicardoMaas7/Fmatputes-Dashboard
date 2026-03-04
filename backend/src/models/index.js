@@ -9,6 +9,9 @@ const Treasury = require('./Treasury');
 const UserTreasuryPayment = require('./UserTreasuryPayment');
 const Notification = require('./Notification');
 const Reminder = require('./Reminder');
+const Team = require('./Team');
+const TeamMember = require('./TeamMember');
+const TransportStop = require('./TransportStop');
 
 // ===== ASSOCIATIONS =====
 
@@ -32,9 +35,17 @@ UserServiceDebt.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 SharedService.hasMany(UserServiceDebt, { foreignKey: 'service_id', as: 'userDebts' });
 UserServiceDebt.belongsTo(SharedService, { foreignKey: 'service_id', as: 'service' });
 
+// SharedService <-> User (creator)
+SharedService.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
+User.hasMany(SharedService, { foreignKey: 'created_by', as: 'createdServices' });
+
 // Transport <-> TransportSeat
 Transport.hasMany(TransportSeat, { foreignKey: 'transport_id', as: 'seats' });
 TransportSeat.belongsTo(Transport, { foreignKey: 'transport_id', as: 'transport' });
+
+// Transport <-> TransportStop
+Transport.hasMany(TransportStop, { foreignKey: 'transport_id', as: 'stops' });
+TransportStop.belongsTo(Transport, { foreignKey: 'transport_id', as: 'transport' });
 
 // User <-> Transport (owner)
 User.hasMany(Transport, { foreignKey: 'owner_id', as: 'ownedTransports' });
@@ -60,6 +71,18 @@ Notification.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 Reminder.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
 User.hasMany(Reminder, { foreignKey: 'created_by', as: 'reminders' });
 
+// Team <-> User (creator)
+Team.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
+User.hasMany(Team, { foreignKey: 'created_by', as: 'createdTeams' });
+
+// Team <-> TeamMember
+Team.hasMany(TeamMember, { foreignKey: 'team_id', as: 'members' });
+TeamMember.belongsTo(Team, { foreignKey: 'team_id', as: 'team' });
+
+// TeamMember <-> User
+TeamMember.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(TeamMember, { foreignKey: 'user_id', as: 'teamMemberships' });
+
 module.exports = {
   User,
   Vote,
@@ -68,8 +91,11 @@ module.exports = {
   UserServiceDebt,
   Transport,
   TransportSeat,
+  TransportStop,
   Treasury,
   UserTreasuryPayment,
   Notification,
   Reminder,
+  Team,
+  TeamMember,
 };

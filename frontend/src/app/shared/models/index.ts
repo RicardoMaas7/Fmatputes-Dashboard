@@ -30,7 +30,11 @@ export interface SharedService {
   name: string;
   iconUrl: string | null;
   totalCost: number;
+  perPersonCost: number | null;
   nextPaymentDate: string | null;
+  paymentDeadline: string | null;
+  createdBy: string | null;
+  creator?: Pick<User, 'id' | 'username' | 'displayName'>;
   isActive: boolean;
   pendingBalance?: number;
 }
@@ -58,9 +62,19 @@ export interface Transport {
   totalSeats: number;
   isActive: boolean;
   seats: TransportSeat[];
+  stops?: TransportStop[];
   occupiedSeats?: number;
   availableSeats?: number;
   userPendingBalance?: number;
+}
+
+/** Parada de transporte */
+export interface TransportStop {
+  id?: string;
+  transportId?: string;
+  name: string;
+  time: string | null;
+  order: number;
 }
 
 /** Asiento de transporte */
@@ -147,4 +161,22 @@ export interface AuthUser {
 export interface LoginResponse {
   token: string;
   user: AuthUser;
+}
+
+/** Equipo */
+export interface Team {
+  id: string;
+  name: string;
+  createdBy: string;
+  creator?: Pick<User, 'id' | 'username' | 'displayName' | 'profilePhotoUrl'>;
+  members: TeamMember[];
+  created_at?: string;
+}
+
+/** Miembro de equipo */
+export interface TeamMember {
+  id: string;
+  teamId: string;
+  userId: string;
+  user?: Pick<User, 'id' | 'username' | 'displayName' | 'profilePhotoUrl'>;
 }

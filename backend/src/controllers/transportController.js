@@ -1,7 +1,7 @@
-const { Transport, TransportSeat, User } = require('../models');
+const { Transport, TransportSeat, TransportStop, User } = require('../models');
 const { createNotification } = require('../services/notificationHelper');
 
-// GET /api/transport — All transports with seats + owner info
+// GET /api/transport — All transports with seats + owner info + stops
 const getAllTransports = async (req, res) => {
   try {
     const transports = await Transport.findAll({
@@ -15,6 +15,10 @@ const getAllTransports = async (req, res) => {
           association: 'owner',
           attributes: ['id', 'username', 'displayName'],
         },
+        {
+          association: 'stops',
+          order: [['order', 'ASC']],
+        },
       ],
       order: [['created_at', 'DESC']],
     });
@@ -24,6 +28,10 @@ const getAllTransports = async (req, res) => {
       // Sort seats by priority (lower = higher priority)
       if (data.seats) {
         data.seats.sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999));
+      }
+      // Sort stops by order
+      if (data.stops) {
+        data.stops.sort((a, b) => a.order - b.order);
       }
       return {
         ...data,
@@ -43,7 +51,7 @@ const getAllTransports = async (req, res) => {
 // POST /api/transport — Create transport (any authenticated user becomes owner)
 const createTransport = async (req, res) => {
   try {
-    const { name, driverName, paradero, departureMorning, returnMorning, totalSeats } = req.body;
+    const { name, driverName, paradero, departureMorning, returnMorning, totalSeats, stops } = req.body;
     if (!name) return res.status(400).json({ message: 'Name is required.' });
 
     const transport = await Transport.create({
@@ -57,7 +65,23 @@ const createTransport = async (req, res) => {
       isActive: true,
     });
 
-    res.status(201).json(transport);
+    // Create stops if provided
+    if (Array.isArray(stops) && stops.length > 0) {
+      await TransportStop.bulkCreate(
+        stops.map((s, i) => ({
+          transportId: transport.id,
+          name: s.name,
+          time: s.time || null,
+          order: s.order ?? i,
+        }))
+      );
+    }
+
+    // Re-fetch with stops
+    const full = await Transport.findByPk(transport.id, {
+      include: [{ association: 'stops' }],
+    });
+    res.status(201).json(full);
   } catch (error) {
     console.error('[Transport] Error creating:', error);
     res.status(500).json({ message: 'Error creating transport.' });
@@ -75,7 +99,7 @@ const updateTransport = async (req, res) => {
       return res.status(403).json({ message: 'Solo el dueño o un admin puede editar este transporte.' });
     }
 
-    const { name, driverName, paradero, departureMorning, returnMorning, totalSeats } = req.body;
+    const { name, driverName, paradero, departureMorning, returnMorning, totalSeats, stops } = req.body;
     if (name !== undefined) transport.name = name;
     if (driverName !== undefined) transport.driverName = driverName;
     if (paradero !== undefined) transport.paradero = paradero;
@@ -84,7 +108,27 @@ const updateTransport = async (req, res) => {
     if (totalSeats !== undefined) transport.totalSeats = totalSeats;
 
     await transport.save();
-    res.json(transport);
+
+    // Rebuild stops if provided
+    if (Array.isArray(stops)) {
+      await TransportStop.destroy({ where: { transportId: transport.id } });
+      if (stops.length > 0) {
+        await TransportStop.bulkCreate(
+          stops.map((s, i) => ({
+            transportId: transport.id,
+            name: s.name,
+            time: s.time || null,
+            order: s.order ?? i,
+          }))
+        );
+      }
+    }
+
+    // Re-fetch with stops
+    const full = await Transport.findByPk(transport.id, {
+      include: [{ association: 'stops' }],
+    });
+    res.json(full);
   } catch (error) {
     console.error('[Transport] Error actualizando:', error);
     res.status(500).json({ message: 'Error al actualizar transporte.' });
@@ -101,8 +145,9 @@ const deleteTransport = async (req, res) => {
       return res.status(403).json({ message: 'Solo el dueño o un admin puede eliminar este transporte.' });
     }
 
-    // Delete associated seats first
+    // Delete associated seats and stops first
     await TransportSeat.destroy({ where: { transportId: transport.id } });
+    await TransportStop.destroy({ where: { transportId: transport.id } });
     await transport.destroy();
 
     res.json({ message: 'Transporte eliminado.' });

@@ -5,7 +5,7 @@ import { DashboardService } from '../../shared/services/dashboard.service';
 import { AuthService } from '../../shared/services/auth.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { ConfirmModalService } from '../../shared/services/confirm-modal.service';
-import { Transport, TransportSeat } from '../../shared/models';
+import { Transport, TransportSeat, TransportStop } from '../../shared/models';
 
 @Component({
   selector: 'app-transport',
@@ -22,6 +22,7 @@ export class TransportComponent implements OnInit {
   showForm = false;
   editingId: string | null = null;
   form = { name: '', driverName: '', paradero: '', departureMorning: '', returnMorning: '', totalSeats: 4 };
+  formStops: { name: string; time: string }[] = [];
   saving = false;
 
   // Priority reorder
@@ -79,6 +80,7 @@ export class TransportComponent implements OnInit {
   openCreateForm(): void {
     this.editingId = null;
     this.form = { name: '', driverName: '', paradero: '', departureMorning: '', returnMorning: '', totalSeats: 4 };
+    this.formStops = [];
     this.showForm = true;
   }
 
@@ -92,6 +94,9 @@ export class TransportComponent implements OnInit {
       returnMorning: t.returnMorning || '',
       totalSeats: t.totalSeats,
     };
+    this.formStops = (t.stops || [])
+      .sort((a, b) => a.order - b.order)
+      .map(s => ({ name: s.name, time: s.time || '' }));
     this.showForm = true;
   }
 
@@ -107,13 +112,16 @@ export class TransportComponent implements OnInit {
     }
     this.saving = true;
 
-    const payload: Partial<Transport> = {
+    const payload: any = {
       name: this.form.name.trim(),
       driverName: this.form.driverName.trim() || null,
       paradero: this.form.paradero.trim() || null,
       departureMorning: this.form.departureMorning || null,
       returnMorning: this.form.returnMorning || null,
       totalSeats: this.form.totalSeats,
+      stops: this.formStops
+        .filter(s => s.name.trim())
+        .map((s, i) => ({ name: s.name.trim(), time: s.time || null, order: i })),
     };
 
     const obs = this.editingId
@@ -232,5 +240,15 @@ export class TransportComponent implements OnInit {
 
   seatProgress(t: Transport): number {
     return t.totalSeats > 0 ? ((t.occupiedSeats || 0) / t.totalSeats) * 100 : 0;
+  }
+
+  // ─── Stops management ───
+
+  addStop(): void {
+    this.formStops.push({ name: '', time: '' });
+  }
+
+  removeStop(index: number): void {
+    this.formStops.splice(index, 1);
   }
 }

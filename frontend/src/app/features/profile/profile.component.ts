@@ -4,12 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { DashboardService } from '../../shared/services/dashboard.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { User } from '../../shared/models';
+import { User, BankAccount } from '../../shared/models';
+import { BankAccountsComponent } from '../../shared/components/bank-accounts/bank-accounts.component';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, BankAccountsComponent],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css'],
 })
@@ -20,6 +21,7 @@ export class ProfileComponent implements OnInit {
   user: User | null = null;
   msg: { text: string; type: 'ok' | 'err' } | null = null;
   photoPreview: string | null = null;
+  bankAccounts: BankAccount[] = [];
 
   form = {
     displayName: '',
@@ -45,6 +47,7 @@ export class ProfileComponent implements OnInit {
         this.form.displayName = u.displayName || '';
         this.form.birthday = u.birthday || '';
         this.form.profilePhotoUrl = u.profilePhotoUrl || '';
+        this.bankAccounts = u.bankAccounts || [];
         this.loading = false;
       },
       error: () => (this.loading = false),

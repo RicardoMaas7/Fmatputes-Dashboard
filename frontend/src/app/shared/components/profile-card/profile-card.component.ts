@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-profile-card',
@@ -10,10 +11,10 @@ import { CommonModule } from '@angular/common';
       <!-- Photo -->
       <div class="photo-container">
         <img
-          [src]="photoUrl || 'assets/default-avatar.png'"
+          [src]="resolvedPhotoUrl || defaultAvatar"
           [alt]="displayName"
           class="photo"
-          onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 200%22%3E%3Crect fill=%22%230e0e14%22 width=%22200%22 height=%22200%22/%3E%3Ctext fill=%22%2339ff14%22 font-family=%22monospace%22 font-size=%2260%22 x=%2250%25%22 y=%2255%25%22 text-anchor=%22middle%22%3E%3F%3C/text%3E%3C/svg%3E'"
+          (error)="onImgError($event)"
         />
         <div class="scanlines"></div>
       </div>
@@ -91,4 +92,17 @@ export class ProfileCardComponent {
   @Input() displayName = '';
   @Input() photoUrl = '';
   @Input() birthday = '';
+  defaultAvatar = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect fill='%230e0e14' width='200' height='200'/%3E%3Ctext fill='%2339ff14' font-family='monospace' font-size='60' x='50%25' y='55%25' text-anchor='middle'%3E%3F%3C/text%3E%3C/svg%3E";
+
+  get resolvedPhotoUrl(): string {
+    if (!this.photoUrl) return '';
+    if (this.photoUrl.startsWith('/uploads/')) {
+      return environment.apiUrl.replace('/api', '') + this.photoUrl;
+    }
+    return this.photoUrl;
+  }
+
+  onImgError(event: Event): void {
+    (event.target as HTMLImageElement).src = this.defaultAvatar;
+  }
 }

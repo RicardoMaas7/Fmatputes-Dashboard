@@ -68,6 +68,7 @@ app.use('/api/treasury', require('./routes/treasuryRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/bank-accounts', require('./routes/bankAccountRoutes'));
 app.use('/api/reminders', require('./routes/reminderRoutes'));
+app.use('/api/teams', require('./routes/teamRoutes'));
 
 // ── Inicialización ────────────────────────────────────────────────
 const startServer = async () => {
