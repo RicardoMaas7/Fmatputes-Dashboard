@@ -154,8 +154,6 @@ const deleteUser = async (req, res) => {
   }
 };
 
-module.exports = { getAllUsers, getMe, getUserById, createUser, updateUser, deleteUser, uploadPhoto };
-
 // POST /api/users/me/photo — Upload profile photo
 const uploadPhoto = async (req, res) => {
   try {
@@ -186,3 +184,5 @@ const uploadPhoto = async (req, res) => {
     res.status(500).json({ message: 'Error al subir foto de perfil.' });
   }
 };
+
+module.exports = { getAllUsers, getMe, getUserById, createUser, updateUser, deleteUser, uploadPhoto };
