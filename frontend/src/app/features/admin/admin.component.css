@@ -5,6 +5,13 @@
   margin: 0 auto;
 }
 
+@media (max-width: 480px) {
+  .admin-container {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+}
+
 .tab-btn {
   color: rgba(57, 255, 20, 0.4);
   border: 1px solid transparent;

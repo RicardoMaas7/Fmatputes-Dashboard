@@ -28,11 +28,20 @@ import { ToastService, Toast } from '../../services/toast.service';
       position: fixed;
       bottom: 1.5rem;
       right: 1.5rem;
+      left: auto;
       z-index: 9999;
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
-      max-width: 360px;
+      max-width: min(360px, calc(100vw - 2rem));
+    }
+    @media (max-width: 480px) {
+      .toast-container {
+        right: 0.75rem;
+        bottom: 0.75rem;
+        left: 0.75rem;
+        max-width: none;
+      }
     }
     .toast-item {
       display: flex;

@@ -50,7 +50,13 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
       align-items: center;
       justify-content: center;
       padding: 1rem;
-      min-height: 320px;
+      min-height: 280px;
+    }
+    @media (max-width: 480px) {
+      .radar-viewport {
+        padding: 0.5rem;
+        min-height: 240px;
+      }
     }
     .radar-container {
       width: 100%;
@@ -71,6 +77,11 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
       grid-template-columns: repeat(5, 1fr);
       border-top: 1px solid rgba(57, 255, 20, 0.06);
       background: rgba(14, 14, 22, 0.6);
+    }
+    @media (max-width: 360px) {
+      .stats-bar {
+        grid-template-columns: repeat(3, 1fr);
+      }
     }
     .stat-cell {
       display: flex;

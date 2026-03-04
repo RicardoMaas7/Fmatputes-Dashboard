@@ -104,7 +104,7 @@ import { RadarChartComponent } from '../../shared/components/radar-chart/radar-c
     .back-btn:hover { color: #39ff14; }
     .member-grid {
       display: grid;
-      grid-template-columns: 240px 1fr;
+      grid-template-columns: minmax(180px, 240px) 1fr;
       gap: 1.25rem;
     }
     .left-col {
