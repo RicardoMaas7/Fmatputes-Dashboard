@@ -9,7 +9,7 @@ import { Reminder } from '../../models';
   imports: [CommonModule],
   template: `
     <div *ngIf="reminders.length > 0" class="reminders-wrapper animate-fade-in">
-      <div *ngFor="let r of reminders" class="reminder-item" [ngClass]="'type-' + r.type">
+      <div *ngFor="let r of visibleReminders" class="reminder-item" [ngClass]="'type-' + r.type">
         <div class="reminder-icon" [innerHTML]="getIcon(r.type)"></div>
         <div class="reminder-body">
           <h4 class="reminder-title">{{ r.title }}</h4>
@@ -19,6 +19,9 @@ import { Reminder } from '../../models';
           </span>
         </div>
       </div>
+      <button *ngIf="reminders.length > 3" (click)="expanded = !expanded" class="toggle-btn">
+        {{ expanded ? '▲ Ver menos' : '▼ Ver ' + (reminders.length - 3) + ' más' }}
+      </button>
     </div>
   `,
   styles: [`
@@ -80,10 +83,33 @@ import { Reminder } from '../../models';
       margin-top: 4px;
       display: block;
     }
+    .toggle-btn {
+      background: none;
+      border: 1px solid rgba(57, 255, 20, 0.1);
+      color: rgba(57, 255, 20, 0.45);
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+      width: 100%;
+    }
+    .toggle-btn:hover {
+      color: #39ff14;
+      border-color: rgba(57, 255, 20, 0.25);
+      background: rgba(57, 255, 20, 0.04);
+    }
   `],
 })
 export class RemindersBannerComponent {
   @Input() reminders: Reminder[] = [];
+  expanded = false;
+
+  get visibleReminders(): Reminder[] {
+    return this.expanded ? this.reminders : this.reminders.slice(0, 3);
+  }
 
   constructor(private sanitizer: DomSanitizer) {}
 
