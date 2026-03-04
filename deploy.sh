@@ -74,7 +74,12 @@ ufw allow 443/tcp  >/dev/null  # HTTPS
 ufw --force enable >/dev/null
 log "Firewall activo: SSH(22), HTTP(80), HTTPS(443)."
 
-# ── 3. Nginx Proxy Manager ────────────────────────────────
+# ── 3. Red compartida + Nginx Proxy Manager ──────────────
+# Crear la red antes de cualquier compose para evitar conflictos
+docker network inspect backend_network >/dev/null 2>&1 || \
+  docker network create backend_network
+log "Red backend_network lista."
+
 if ! docker ps --format '{{.Names}}' | grep -q "nginx-proxy-manager"; then
   log "Instalando Nginx Proxy Manager..."
   mkdir -p "$NPM_DIR"
@@ -96,8 +101,7 @@ services:
 
 networks:
   backend_network:
-    name: backend_network
-    driver: bridge
+    external: true
 NPMEOF
 
   cd "$NPM_DIR"
@@ -109,10 +113,6 @@ NPMEOF
 else
   log "Nginx Proxy Manager ya está corriendo."
 fi
-
-# Asegurar que la red backend_network existe
-docker network inspect backend_network >/dev/null 2>&1 || \
-  docker network create backend_network
 
 # ── 4. Clonar / actualizar el proyecto ─────────────────────
 if [ -d "$APP_DIR/.git" ]; then
