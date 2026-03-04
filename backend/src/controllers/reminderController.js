@@ -89,8 +89,6 @@ const toggleReminder = async (req, res) => {
   }
 };
 
-module.exports = { getReminders, getAllReminders, createReminder, deleteReminder, toggleReminder, notifyTeam };
-
 // POST /api/reminders/:id/notify-team — Send reminder as notification to all members of a team
 const notifyTeam = async (req, res) => {
   try {
@@ -114,3 +112,5 @@ const notifyTeam = async (req, res) => {
     res.status(500).json({ message: 'Error al notificar al equipo.' });
   }
 };
+
+module.exports = { getReminders, getAllReminders, createReminder, deleteReminder, toggleReminder, notifyTeam };
