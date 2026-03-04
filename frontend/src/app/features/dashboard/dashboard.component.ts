@@ -10,6 +10,7 @@ import { NotificationsPanelComponent } from '../../shared/components/notificatio
 import { ServicesPanelComponent } from '../../shared/components/services-panel/services-panel.component';
 import { RemindersBannerComponent } from '../../shared/components/reminders-banner/reminders-banner.component';
 import { forkJoin } from 'rxjs';
+import { User, BankAccount, SharedService, Transport, Treasury, AppNotification, Reminder } from '../../shared/models';
 
 @Component({
   selector: 'app-dashboard',
@@ -29,8 +30,8 @@ import { forkJoin } from 'rxjs';
 })
 export class DashboardComponent implements OnInit {
   // User data
-  user: any = null;
-  bankAccounts: any[] = [];
+  user: User | null = null;
+  bankAccounts: BankAccount[] = [];
 
   // Radar
   radarSvg = '';
@@ -38,15 +39,15 @@ export class DashboardComponent implements OnInit {
   isRadarLoading = true;
 
   // Services
-  services: any[] = [];
-  transports: any[] = [];
-  treasury: any = null;
+  services: SharedService[] = [];
+  transports: Transport[] = [];
+  treasury: Treasury | null = null;
 
   // Notifications
-  notifications: any[] = [];
+  notifications: AppNotification[] = [];
 
   // Reminders
-  reminders: any[] = [];
+  reminders: Reminder[] = [];
 
   // Loading
   isLoading = true;

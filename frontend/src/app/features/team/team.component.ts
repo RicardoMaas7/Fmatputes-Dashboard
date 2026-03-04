@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { DashboardService } from '../../shared/services/dashboard.service';
+import { User } from '../../shared/models';
 
 @Component({
   selector: 'app-team',
@@ -160,7 +161,7 @@ import { DashboardService } from '../../shared/services/dashboard.service';
   `],
 })
 export class TeamComponent implements OnInit {
-  members: any[] = [];
+  members: User[] = [];
   isLoading = true;
   defaultAvatar = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect fill='%230e0e14' width='200' height='200'/%3E%3Ctext fill='%2339ff14' font-family='monospace' font-size='60' x='50%25' y='55%25' text-anchor='middle'%3E%3F%3C/text%3E%3C/svg%3E";
 

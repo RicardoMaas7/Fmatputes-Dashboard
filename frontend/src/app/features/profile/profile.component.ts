@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { DashboardService } from '../../shared/services/dashboard.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { User } from '../../shared/models';
 
 @Component({
   selector: 'app-profile',
@@ -15,7 +16,7 @@ import { environment } from '../../../environments/environment';
 export class ProfileComponent implements OnInit {
   loading = true;
   saving = false;
-  user: any = null;
+  user: User | null = null;
   msg: { text: string; type: 'ok' | 'err' } | null = null;
 
   form = {
@@ -50,10 +51,10 @@ export class ProfileComponent implements OnInit {
 
   save(): void {
     this.saving = true;
-    this.http.put(`${environment.apiUrl}/users/${this.user.id}`, this.form).subscribe({
-      next: (updated: any) => {
+    this.http.put(`${environment.apiUrl}/users/${this.user!.id}`, this.form).subscribe({
+      next: (updated: Partial<User>) => {
         this.saving = false;
-        this.user = { ...this.user, ...updated };
+        this.user = { ...this.user!, ...updated } as User;
         this.msg = { text: 'Perfil actualizado correctamente.', type: 'ok' };
         setTimeout(() => (this.msg = null), 4000);
       },

@@ -124,6 +124,18 @@ const startServer = async () => {
             const admin = await User.findOne({ where: { username: 'esteban' } });
             if (admin) {
                 await Notification.create({ userId: admin.id, message: '¡Bienvenido al sistema FMAPUTES!', type: 'general' });
+
+                // Calendario FMAT Enero-Mayo 2026
+                const { Reminder } = models;
+                await Reminder.bulkCreate([
+                    { title: 'Día inhábil — Natalicio de Benito Juárez', message: 'No hay clases.', type: 'info', expiresAt: '2026-03-16', isActive: true, createdBy: admin.id },
+                    { title: 'Vacaciones — Semana Santa', message: 'Periodo vacacional del 30 de marzo al 4 de abril.', type: 'warning', expiresAt: '2026-04-04', isActive: true, createdBy: admin.id },
+                    { title: 'Día inhábil — Día del Trabajo', message: 'No hay clases.', type: 'info', expiresAt: '2026-05-01', isActive: true, createdBy: admin.id },
+                    { title: 'Día inhábil — Batalla de Puebla', message: 'No hay clases.', type: 'info', expiresAt: '2026-05-05', isActive: true, createdBy: admin.id },
+                    { title: 'Día inhábil — Día de las Madres', message: '¡Felicidades a las mamás!', type: 'info', expiresAt: '2026-05-10', isActive: true, createdBy: admin.id },
+                    { title: 'Día inhábil — Día del Maestro', message: 'No hay clases.', type: 'info', expiresAt: '2026-05-15', isActive: true, createdBy: admin.id },
+                    { title: 'Fin del semestre Ene-May 2026', message: 'Último día de clases del semestre.', type: 'urgent', expiresAt: '2026-05-30', isActive: true, createdBy: admin.id },
+                ]);
             }
 
             console.log('[Auto-Seed] Base de datos sembrada: 13 usuarios, servicios, transportes y tesorería.');

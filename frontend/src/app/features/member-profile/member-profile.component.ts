@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DashboardService } from '../../shared/services/dashboard.service';
 import { ProfileCardComponent } from '../../shared/components/profile-card/profile-card.component';
+import { User } from '../../shared/models';
 import { RadarChartComponent } from '../../shared/components/radar-chart/radar-chart.component';
 
 @Component({
@@ -35,7 +36,7 @@ import { RadarChartComponent } from '../../shared/components/radar-chart/radar-c
         <!-- Left: Profile Card -->
         <div class="left-col space-y-4">
           <app-profile-card
-            [displayName]="member.displayName"
+            [displayName]="member.displayName || ''"
             [photoUrl]="member.profilePhotoUrl || ''"
             [birthday]="formattedBirthday"
           ></app-profile-card>
@@ -72,7 +73,7 @@ import { RadarChartComponent } from '../../shared/components/radar-chart/radar-c
         <div class="right-col space-y-4">
           <app-radar-chart
             [svgContent]="radarSvg"
-            [userName]="member.displayName"
+            [userName]="member.displayName || ''"
             [stats]="radarStats"
             [isLoading]="isRadarLoading"
           ></app-radar-chart>
@@ -176,7 +177,7 @@ import { RadarChartComponent } from '../../shared/components/radar-chart/radar-c
   `],
 })
 export class MemberProfileComponent implements OnInit {
-  member: any = null;
+  member: User | null = null;
   isLoading = true;
   isRadarLoading = false;
   radarSvg = '';

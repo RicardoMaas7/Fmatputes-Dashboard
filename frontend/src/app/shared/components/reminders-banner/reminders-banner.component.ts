@@ -1,6 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { Reminder } from '../../models';
 
 @Component({
   selector: 'app-reminders-banner',
@@ -14,7 +15,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
           <h4 class="reminder-title">{{ r.title }}</h4>
           <p *ngIf="r.message" class="reminder-msg">{{ r.message }}</p>
           <span *ngIf="r.expires_at || r.expiresAt" class="reminder-expires">
-            Expira: {{ formatDate(r.expires_at || r.expiresAt) }}
+            Expira: {{ formatDate((r.expires_at || r.expiresAt) ?? '') }}
           </span>
         </div>
       </div>
@@ -82,7 +83,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   `],
 })
 export class RemindersBannerComponent {
-  @Input() reminders: any[] = [];
+  @Input() reminders: Reminder[] = [];
 
   constructor(private sanitizer: DomSanitizer) {}
 

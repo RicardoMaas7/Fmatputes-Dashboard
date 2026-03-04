@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../shared/services/admin.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { ConfirmModalService } from '../../shared/services/confirm-modal.service';
+import { User, SharedService, UserServiceDebt, Transport, Treasury, Reminder } from '../../shared/models';
 
 type Tab = 'users' | 'services' | 'transport' | 'treasury' | 'reminders';
 
@@ -35,33 +37,33 @@ export class AdminComponent implements OnInit {
   };
 
   /* ─── Users ─── */
-  users: any[] = [];
+  users: User[] = [];
   newUser = { username: '', password: '', displayName: '', birthday: '', role: 'user' };
   showNewUserForm = false;
 
   /* ─── Services ─── */
-  services: any[] = [];
+  services: SharedService[] = [];
   newService = { name: '', totalCost: 0, nextPaymentDate: '', iconUrl: '' };
   showNewServiceForm = false;
-  selectedServiceDebts: any[] = [];
+  selectedServiceDebts: UserServiceDebt[] = [];
   selectedServiceId: string | null = null;
   showDebtsModal = false;
 
   /* ─── Transport ─── */
-  transports: any[] = [];
+  transports: Transport[] = [];
   newTransport = { name: '', driverName: '', paradero: '', departureMorning: '', returnMorning: '', totalSeats: 4 };
   showNewTransportForm = false;
 
   /* ─── Treasury ─── */
-  treasury: any = null;
+  treasury: Treasury | null = null;
   paymentForm = { userId: '', amountPaid: 0 };
 
   /* ─── Reminders ─── */
-  reminders: any[] = [];
+  reminders: Reminder[] = [];
   newReminder = { title: '', message: '', type: 'info', expiresAt: '' };
   showNewReminderForm = false;
 
-  constructor(private admin: AdminService, private sanitizer: DomSanitizer) {}
+  constructor(private admin: AdminService, private sanitizer: DomSanitizer, private modal: ConfirmModalService) {}
 
   getTabIcon(icon: string): SafeHtml {
     return this.sanitizer.bypassSecurityTrustHtml(this.tabIcons[icon] || '');
@@ -132,7 +134,7 @@ export class AdminComponent implements OnInit {
     });
   }
 
-  toggleUserRole(user: any): void {
+  toggleUserRole(user: User): void {
     const newRole = user.role === 'admin' ? 'user' : 'admin';
     this.admin.updateUser(user.id, { role: newRole }).subscribe({
       next: () => {
@@ -143,8 +145,9 @@ export class AdminComponent implements OnInit {
     });
   }
 
-  deleteUser(user: any): void {
-    if (!confirm(`¿Eliminar al usuario "${user.username}"? Esta acción no se puede deshacer.`)) return;
+  async deleteUser(user: User): Promise<void> {
+    const ok = await this.modal.confirm('Eliminar usuario', `¿Eliminar al usuario "${user.username}"? Esta acción no se puede deshacer.`, { type: 'danger' });
+    if (!ok) return;
     this.admin.deleteUser(user.id).subscribe({
       next: () => {
         this.flash('Usuario eliminado.', 'ok');
@@ -154,8 +157,8 @@ export class AdminComponent implements OnInit {
     });
   }
 
-  resetUserPassword(user: any): void {
-    const newPassword = prompt(`Nueva contraseña para "${user.username}" (mín. 6 caracteres):`);
+  async resetUserPassword(user: User): Promise<void> {
+    const newPassword = await this.modal.prompt('Restablecer contraseña', `Nueva contraseña para "${user.username}" (mín. 6 caracteres):`, { placeholder: 'Mínimo 6 caracteres' });
     if (!newPassword || newPassword.length < 6) {
       if (newPassword !== null) this.flash('La contraseña debe tener al menos 6 caracteres.', 'err');
       return;
@@ -180,7 +183,7 @@ export class AdminComponent implements OnInit {
     });
   }
 
-  toggleServiceActive(svc: any): void {
+  toggleServiceActive(svc: SharedService): void {
     this.admin.updateService(svc.id, { isActive: !svc.isActive }).subscribe({
       next: () => {
         svc.isActive = !svc.isActive;
@@ -190,8 +193,9 @@ export class AdminComponent implements OnInit {
     });
   }
 
-  deleteService(svc: any): void {
-    if (!confirm(`¿Eliminar servicio "${svc.name}"? Se borrarán también las deudas asociadas.`)) return;
+  async deleteService(svc: SharedService): Promise<void> {
+    const ok = await this.modal.confirm('Eliminar servicio', `¿Eliminar servicio "${svc.name}"? Se borrarán también las deudas asociadas.`, { type: 'danger' });
+    if (!ok) return;
     this.admin.deleteService(svc.id).subscribe({
       next: () => {
         this.flash('Servicio eliminado.', 'ok');
@@ -201,7 +205,7 @@ export class AdminComponent implements OnInit {
     });
   }
 
-  saveServiceField(svc: any): void {
+  saveServiceField(svc: SharedService): void {
     this.admin.updateService(svc.id, {
       totalCost: svc.totalCost,
       nextPaymentDate: svc.nextPaymentDate,
@@ -211,7 +215,7 @@ export class AdminComponent implements OnInit {
     });
   }
 
-  openDebts(svc: any): void {
+  openDebts(svc: SharedService): void {
     this.selectedServiceId = svc.id;
     this.showDebtsModal = true;
     this.admin.getServiceDebts(svc.id).subscribe({
@@ -226,7 +230,7 @@ export class AdminComponent implements OnInit {
     this.selectedServiceDebts = [];
   }
 
-  saveDebt(debt: any): void {
+  saveDebt(debt: UserServiceDebt): void {
     if (!this.selectedServiceId) return;
     this.admin.updateServiceDebt(this.selectedServiceId, debt.userId, { pendingBalance: debt.pendingBalance }).subscribe({
       next: () => this.flash('Deuda actualizada.', 'ok'),
@@ -248,7 +252,7 @@ export class AdminComponent implements OnInit {
     });
   }
 
-  saveTransportField(t: any): void {
+  saveTransportField(t: Transport): void {
     this.admin.updateTransport(t.id, {
       driverName: t.driverName,
       paradero: t.paradero,
@@ -278,7 +282,7 @@ export class AdminComponent implements OnInit {
     if (!this.treasury) return;
     this.admin.updateTreasury({
       nextGoalAmount: this.treasury.nextGoalAmount,
-      nextGoalDescription: this.treasury.nextGoalDescription,
+      nextGoalDescription: this.treasury.nextGoalDescription ?? undefined,
     }).subscribe({
       next: () => this.flash('Meta actualizada.', 'ok'),
       error: () => this.flash('Error al actualizar meta.', 'err'),
@@ -299,7 +303,7 @@ export class AdminComponent implements OnInit {
     });
   }
 
-  toggleReminderActive(r: any): void {
+  toggleReminderActive(r: Reminder): void {
     this.admin.toggleReminder(r.id).subscribe({
       next: (updated) => {
         r.isActive = updated.isActive ?? r.is_active;
@@ -310,8 +314,9 @@ export class AdminComponent implements OnInit {
     });
   }
 
-  deleteReminder(r: any): void {
-    if (!confirm(`¿Eliminar recordatorio "${r.title}"?`)) return;
+  async deleteReminder(r: Reminder): Promise<void> {
+    const ok = await this.modal.confirm('Eliminar recordatorio', `¿Eliminar recordatorio "${r.title}"?`, { type: 'warning' });
+    if (!ok) return;
     this.admin.deleteReminder(r.id).subscribe({
       next: () => {
         this.flash('Recordatorio eliminado.', 'ok');

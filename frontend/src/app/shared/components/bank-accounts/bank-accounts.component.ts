@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { DashboardService } from '../../services/dashboard.service';
+import { ConfirmModalService } from '../../services/confirm-modal.service';
 
 interface BankAccount {
   id?: string;
@@ -84,6 +85,7 @@ export class BankAccountsComponent {
   constructor(
     private sanitizer: DomSanitizer,
     private dashboard: DashboardService,
+    private modal: ConfirmModalService,
   ) {}
 
   addAccount(): void {
@@ -99,9 +101,10 @@ export class BankAccountsComponent {
     });
   }
 
-  removeAccount(account: BankAccount): void {
+  async removeAccount(account: BankAccount): Promise<void> {
     if (!account.id) return;
-    if (!confirm(`¿Eliminar la cuenta ${account.bankName}?`)) return;
+    const ok = await this.modal.confirm('Eliminar cuenta', `¿Eliminar la cuenta ${account.bankName}?`, { type: 'danger' });
+    if (!ok) return;
     this.dashboard.deleteBankAccount(account.id).subscribe({
       next: () => {
         this.accounts = this.accounts.filter(a => a.id !== account.id);

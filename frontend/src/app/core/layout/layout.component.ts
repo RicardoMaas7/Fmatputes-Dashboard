@@ -3,11 +3,13 @@ import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/rou
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../shared/services/auth.service';
 import { ToastComponent } from '../../shared/components/toast/toast.component';
+import { ConfirmModalComponent } from '../../shared/components/confirm-modal/confirm-modal.component';
+import { AuthUser } from '../../shared/models';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ToastComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ToastComponent, ConfirmModalComponent],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.css'
 })
@@ -20,7 +22,7 @@ export class LayoutComponent {
     return this.authService.isAdmin();
   }
 
-  get currentUser(): any {
+  get currentUser(): AuthUser | null {
     return this.authService.getCurrentUser();
   }
 

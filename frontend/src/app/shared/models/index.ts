@@ -97,7 +97,7 @@ export interface AppNotification {
   id: string;
   userId: string;
   message: string;
-  type: string;
+  type: 'trophy' | 'transport' | 'payment' | 'general';
   isRead: boolean;
   created_at: string;
 }

@@ -1,6 +1,7 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { SharedService, Transport, Treasury } from '../../models';
 
 @Component({
   selector: 'app-services-panel',
@@ -197,9 +198,9 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   `],
 })
 export class ServicesPanelComponent implements OnChanges {
-  @Input() services: any[] = [];
-  @Input() transports: any[] = [];
-  @Input() treasury: any = null;
+  @Input() services: SharedService[] = [];
+  @Input() transports: Transport[] = [];
+  @Input() treasury: Treasury | null = null;
 
   seatIndicatorsMap = new Map<string, boolean[]>();
 

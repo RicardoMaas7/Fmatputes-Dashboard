@@ -43,8 +43,18 @@
     <div *ngIf="showNewUserForm" class="neon-card p-4 mb-4 animate-slide-up">
       <h3 class="text-sm text-wired-amber uppercase tracking-wider mb-3">Crear Usuario</h3>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <input [(ngModel)]="newUser.username" placeholder="Username" class="neon-input text-sm" />
-        <input [(ngModel)]="newUser.password" placeholder="Password" type="password" class="neon-input text-sm" />
+        <div>
+          <input [(ngModel)]="newUser.username" #username="ngModel" required minlength="3" placeholder="Username" class="neon-input text-sm w-full" [class.field-error]="username.invalid && username.touched" />
+          <span *ngIf="username.invalid && username.touched" class="field-error-msg">
+            {{ username.errors?.['required'] ? 'Username requerido' : 'Mín. 3 caracteres' }}
+          </span>
+        </div>
+        <div>
+          <input [(ngModel)]="newUser.password" #password="ngModel" required minlength="6" placeholder="Password" type="password" class="neon-input text-sm w-full" [class.field-error]="password.invalid && password.touched" />
+          <span *ngIf="password.invalid && password.touched" class="field-error-msg">
+            {{ password.errors?.['required'] ? 'Password requerido' : 'Mín. 6 caracteres' }}
+          </span>
+        </div>
         <input [(ngModel)]="newUser.displayName" placeholder="Nombre para mostrar" class="neon-input text-sm" />
         <input [(ngModel)]="newUser.birthday" placeholder="YYYY-MM-DD" class="neon-input text-sm" />
         <select [(ngModel)]="newUser.role" class="neon-input text-sm bg-wired-panel">
@@ -52,7 +62,7 @@
           <option value="admin">Admin</option>
         </select>
       </div>
-      <button (click)="createUser()" class="neon-btn text-xs px-4 py-2 mt-3">CREAR</button>
+      <button (click)="createUser()" class="neon-btn text-xs px-4 py-2 mt-3" [disabled]="username.invalid || password.invalid">CREAR</button>
     </div>
 
     <!-- Users Table -->
@@ -108,12 +118,15 @@
     <div *ngIf="showNewServiceForm" class="neon-card p-4 mb-4 animate-slide-up">
       <h3 class="text-sm text-wired-amber uppercase tracking-wider mb-3">Crear Servicio</h3>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <input [(ngModel)]="newService.name" placeholder="Nombre (ej: ChatGPT)" class="neon-input text-sm" />
+        <div>
+          <input [(ngModel)]="newService.name" #svcName="ngModel" required placeholder="Nombre (ej: ChatGPT)" class="neon-input text-sm w-full" [class.field-error]="svcName.invalid && svcName.touched" />
+          <span *ngIf="svcName.invalid && svcName.touched" class="field-error-msg">Nombre requerido</span>
+        </div>
         <input [(ngModel)]="newService.totalCost" placeholder="Costo total" type="number" class="neon-input text-sm" />
         <input [(ngModel)]="newService.nextPaymentDate" placeholder="Prox. pago YYYY-MM-DD" class="neon-input text-sm" />
         <input [(ngModel)]="newService.iconUrl" placeholder="URL ícono (opcional)" class="neon-input text-sm" />
       </div>
-      <button (click)="createService()" class="neon-btn text-xs px-4 py-2 mt-3">CREAR</button>
+      <button (click)="createService()" class="neon-btn text-xs px-4 py-2 mt-3" [disabled]="svcName.invalid">CREAR</button>
     </div>
 
     <!-- Services List -->
@@ -190,14 +203,17 @@
     <div *ngIf="showNewTransportForm" class="neon-card p-4 mb-4 animate-slide-up">
       <h3 class="text-sm text-wired-amber uppercase tracking-wider mb-3">Crear Transporte</h3>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <input [(ngModel)]="newTransport.name" placeholder="Nombre (ej: Carro de Juan)" class="neon-input text-sm" />
+        <div>
+          <input [(ngModel)]="newTransport.name" #tName="ngModel" required placeholder="Nombre (ej: Carro de Juan)" class="neon-input text-sm w-full" [class.field-error]="tName.invalid && tName.touched" />
+          <span *ngIf="tName.invalid && tName.touched" class="field-error-msg">Nombre requerido</span>
+        </div>
         <input [(ngModel)]="newTransport.driverName" placeholder="Conductor" class="neon-input text-sm" />
         <input [(ngModel)]="newTransport.paradero" placeholder="Paradero" class="neon-input text-sm" />
         <input [(ngModel)]="newTransport.departureMorning" placeholder="Hora salida (ej: 07:00)" class="neon-input text-sm" />
         <input [(ngModel)]="newTransport.returnMorning" placeholder="Hora regreso (ej: 13:00)" class="neon-input text-sm" />
         <input [(ngModel)]="newTransport.totalSeats" placeholder="Total cupos" type="number" class="neon-input text-sm" />
       </div>
-      <button (click)="createTransport()" class="neon-btn text-xs px-4 py-2 mt-3">CREAR</button>
+      <button (click)="createTransport()" class="neon-btn text-xs px-4 py-2 mt-3" [disabled]="tName.invalid">CREAR</button>
     </div>
 
     <div class="space-y-3">
@@ -309,7 +325,10 @@
     <div *ngIf="showNewReminderForm" class="neon-card p-4 mb-4 animate-slide-up">
       <h3 class="text-sm text-wired-amber uppercase tracking-wider mb-3">Crear Recordatorio</h3>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <input [(ngModel)]="newReminder.title" placeholder="Título" class="neon-input text-sm" />
+        <div>
+          <input [(ngModel)]="newReminder.title" #rTitle="ngModel" required placeholder="Título" class="neon-input text-sm w-full" [class.field-error]="rTitle.invalid && rTitle.touched" />
+          <span *ngIf="rTitle.invalid && rTitle.touched" class="field-error-msg">Título requerido</span>
+        </div>
         <select [(ngModel)]="newReminder.type" class="neon-input text-sm bg-wired-panel">
           <option value="info">Info</option>
           <option value="warning">Advertencia</option>
@@ -321,7 +340,7 @@
           <input [(ngModel)]="newReminder.expiresAt" type="date" class="neon-input text-sm w-full" />
         </div>
       </div>
-      <button (click)="createReminder()" class="neon-btn text-xs px-4 py-2 mt-3">CREAR</button>
+      <button (click)="createReminder()" class="neon-btn text-xs px-4 py-2 mt-3" [disabled]="rTitle.invalid">CREAR</button>
     </div>
 
     <!-- Reminders List -->

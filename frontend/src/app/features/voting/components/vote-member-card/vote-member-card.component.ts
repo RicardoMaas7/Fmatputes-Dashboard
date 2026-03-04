@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { PendingUser } from '../../../../shared/services/vote.service';
 
 export interface VoteCategory {
   key: string;
@@ -16,7 +17,7 @@ export interface VoteCategory {
   styleUrls: ['./vote-member-card.component.css'],
 })
 export class VoteMemberCardComponent {
-  @Input() user!: any;
+  @Input() user!: PendingUser;
   @Input() categories: VoteCategory[] = [];
   @Input() scores: { [category: string]: number } = {};
   @Input() expanded = false;
