@@ -1,11 +1,14 @@
 const router = require('express').Router();
-const { verifyToken } = require('../middlewares/authMiddleware');
+const { verifyToken, adminOnly } = require('../middlewares/authMiddleware');
 const { getTreasury, registerPayment, updateTreasury } = require('../controllers/treasuryController');
 
 router.use(verifyToken);
 
+// Lectura: cualquier usuario autenticado
 router.get('/', getTreasury);
-router.put('/', updateTreasury);
-router.post('/payment', registerPayment);
+
+// Escritura: solo administradores
+router.put('/', adminOnly, updateTreasury);
+router.post('/payment', adminOnly, registerPayment);
 
 module.exports = router;

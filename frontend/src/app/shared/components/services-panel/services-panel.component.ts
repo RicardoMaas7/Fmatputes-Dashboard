@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
@@ -57,7 +57,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
           <div class="cupos">
             <span class="cupo-label">Cupos</span>
             <span
-              *ngFor="let seat of getSeatIndicators(transport)"
+              *ngFor="let seat of seatIndicatorsMap.get(transport.id) || []"
               class="cupo-dot"
               [ngClass]="seat ? 'occupied' : 'available'"
             ></span>
@@ -196,12 +196,29 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
     }
   `],
 })
-export class ServicesPanelComponent {
+export class ServicesPanelComponent implements OnChanges {
   @Input() services: any[] = [];
   @Input() transports: any[] = [];
   @Input() treasury: any = null;
 
+  seatIndicatorsMap = new Map<string, boolean[]>();
+
   constructor(private sanitizer: DomSanitizer) {}
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['transports']) {
+      this.seatIndicatorsMap.clear();
+      for (const t of this.transports) {
+        const total = t.totalSeats || 4;
+        const occupied = t.occupiedSeats || 0;
+        const indicators: boolean[] = [];
+        for (let i = 0; i < total; i++) {
+          indicators.push(i < occupied);
+        }
+        this.seatIndicatorsMap.set(t.id, indicators);
+      }
+    }
+  }
 
   getServiceSvg(name: string): SafeHtml {
     const icons: Record<string, string> = {
@@ -211,15 +228,5 @@ export class ServicesPanelComponent {
       'Disney+': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#113ccf" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>',
     };
     return this.sanitizer.bypassSecurityTrustHtml(icons[name] || '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#39ff14" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>');
-  }
-
-  getSeatIndicators(transport: any): boolean[] {
-    const total = transport.totalSeats || 4;
-    const occupied = transport.occupiedSeats || 0;
-    const indicators: boolean[] = [];
-    for (let i = 0; i < total; i++) {
-      indicators.push(i < occupied);
-    }
-    return indicators;
   }
 }

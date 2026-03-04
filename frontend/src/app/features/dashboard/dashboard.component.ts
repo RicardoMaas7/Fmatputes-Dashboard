@@ -68,15 +68,15 @@ export class DashboardComponent implements OnInit {
   private generatePeriods(): void {
     const now = new Date();
     const year = now.getFullYear();
-    const q = Math.ceil((now.getMonth() + 1) / 3);
-    // Generate current + 3 previous quarters
+    const currentSemester = now.getMonth() < 6 ? 1 : 2;
+    // Genera el semestre actual + 3 anteriores
     for (let i = 0; i < 4; i++) {
       let pYear = year;
-      let pQ = q - i;
-      while (pQ <= 0) { pQ += 4; pYear--; }
-      this.periods.push(`${pYear}-Q${pQ}`);
+      let pS = currentSemester - i;
+      while (pS <= 0) { pS += 2; pYear--; }
+      this.periods.push(`${pYear}-S${pS}`);
     }
-    this.selectedPeriod = ''; // empty = all time
+    this.selectedPeriod = ''; // vacío = todos los periodos
   }
 
   private loadDashboard(): void {

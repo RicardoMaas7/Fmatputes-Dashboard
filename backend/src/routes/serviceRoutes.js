@@ -1,14 +1,17 @@
 const router = require('express').Router();
-const { verifyToken } = require('../middlewares/authMiddleware');
+const { verifyToken, adminOnly } = require('../middlewares/authMiddleware');
 const { getAllServices, createService, updateService, deleteService, getServiceDebts, updateServiceDebt } = require('../controllers/serviceController');
 
 router.use(verifyToken);
 
+// Lectura: cualquier usuario autenticado
 router.get('/', getAllServices);
-router.post('/', createService);
-router.put('/:id', updateService);
-router.delete('/:id', deleteService);
-router.get('/:id/debts', getServiceDebts);
-router.put('/:id/debts/:userId', updateServiceDebt);
+
+// Escritura: solo administradores
+router.post('/', adminOnly, createService);
+router.put('/:id', adminOnly, updateService);
+router.delete('/:id', adminOnly, deleteService);
+router.get('/:id/debts', adminOnly, getServiceDebts);
+router.put('/:id/debts/:userId', adminOnly, updateServiceDebt);
 
 module.exports = router;

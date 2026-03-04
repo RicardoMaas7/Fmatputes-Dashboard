@@ -81,6 +81,9 @@
                 <button (click)="toggleUserRole(u)" class="text-wired-dim-light hover:text-wired-amber text-[10px] underline">
                   {{ u.role === 'admin' ? '→ user' : '→ admin' }}
                 </button>
+                <button (click)="resetUserPassword(u)" class="text-wired-dim-light hover:text-wired-neon text-[10px] underline">
+                  reset pass
+                </button>
                 <button (click)="deleteUser(u)" class="text-red-500/50 hover:text-red-400 text-[10px] underline">
                   eliminar
                 </button>
@@ -166,7 +169,7 @@
       </div>
       <div class="space-y-2 max-h-80 overflow-y-auto">
         <div *ngFor="let debt of selectedServiceDebts" class="flex items-center gap-3 p-2 border border-wired-dim/20 rounded">
-          <span class="text-xs text-wired-neon flex-1">{{ debt.user?.name || debt.user?.email || 'User #' + debt.userId }}</span>
+          <span class="text-xs text-wired-neon flex-1">{{ debt.user?.displayName || debt.user?.username || 'Usuario #' + debt.userId }}</span>
           <input [(ngModel)]="debt.pendingBalance" type="number" step="0.01" class="neon-input text-xs w-24 text-right" />
           <button (click)="saveDebt(debt)" class="text-[10px] text-wired-amber hover:text-amber-300 underline">Guardar</button>
         </div>

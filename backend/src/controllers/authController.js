@@ -94,5 +94,30 @@ const changePassword = async (req, res) => {
     }
 };
 
-// No olvides exportarlo:
-module.exports = { register, login, changePassword };
+// PUT /api/auth/reset-password/:userId — Admin resets another user's password
+const adminResetPassword = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { newPassword } = req.body;
+
+        if (!newPassword || newPassword.length < 6) {
+            return res.status(400).json({ message: 'La nueva contraseña debe tener al menos 6 caracteres.' });
+        }
+
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'Usuario no encontrado.' });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+        await user.save();
+
+        res.status(200).json({ message: `Contraseña de ${user.username} restablecida exitosamente.` });
+    } catch (error) {
+        console.error('[Auth Error]', error);
+        res.status(500).json({ message: 'Error al restablecer la contraseña.' });
+    }
+};
+
+module.exports = { register, login, changePassword, adminResetPassword };

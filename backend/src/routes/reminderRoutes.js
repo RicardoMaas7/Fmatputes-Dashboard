@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { verifyToken } = require('../middlewares/authMiddleware');
+const { verifyToken, adminOnly } = require('../middlewares/authMiddleware');
 const {
   getReminders,
   getAllReminders,
@@ -10,10 +10,13 @@ const {
 
 router.use(verifyToken);
 
+// Lectura: cualquier usuario autenticado
 router.get('/', getReminders);
-router.get('/all', getAllReminders);
-router.post('/', createReminder);
-router.put('/:id/toggle', toggleReminder);
-router.delete('/:id', deleteReminder);
+
+// Administración: solo admins
+router.get('/all', adminOnly, getAllReminders);
+router.post('/', adminOnly, createReminder);
+router.put('/:id/toggle', adminOnly, toggleReminder);
+router.delete('/:id', adminOnly, deleteReminder);
 
 module.exports = router;

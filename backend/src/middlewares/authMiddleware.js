@@ -1,5 +1,9 @@
 const jwt = require('jsonwebtoken');
 
+/**
+ * Verifica que la petición incluya un JWT válido.
+ * Inyecta `req.user` con los datos del token decodificado.
+ */
 const protectRoute = (req, res, next) => {
     const token = req.header('Authorization');
 
@@ -18,8 +22,19 @@ const protectRoute = (req, res, next) => {
         req.user = decoded; // Inyectamos los datos del usuario en la request
         next();
     } catch (error) {
-        res.status(401).json({ message: 'Token inválido o expirado' });
+        res.status(401).json({ message: 'Token inválido o expirado.' });
     }
 };
 
-module.exports = { protectRoute, verifyToken: protectRoute };
+/**
+ * Middleware que restringe el acceso a usuarios con rol 'admin'.
+ * Debe usarse DESPUÉS de `verifyToken` / `protectRoute`.
+ */
+const adminOnly = (req, res, next) => {
+    if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Acceso restringido a administradores.' });
+    }
+    next();
+};
+
+module.exports = { protectRoute, verifyToken: protectRoute, adminOnly };

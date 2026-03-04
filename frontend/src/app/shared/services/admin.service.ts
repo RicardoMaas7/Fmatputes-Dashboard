@@ -2,6 +2,9 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import {
+  User, SharedService, UserServiceDebt, Transport, Treasury, Reminder
+} from '../models';
 
 @Injectable({
   providedIn: 'root',
@@ -12,87 +15,91 @@ export class AdminService {
   constructor(private http: HttpClient) {}
 
   /* ─── Users ─── */
-  getUsers(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.api}/users`);
+  getUsers(): Observable<User[]> {
+    return this.http.get<User[]>(`${this.api}/users`);
   }
 
-  createUser(data: { username: string; password: string; displayName?: string; birthday?: string; role?: string }): Observable<any> {
-    return this.http.post(`${this.api}/users`, data);
+  createUser(data: { username: string; password: string; displayName?: string; birthday?: string; role?: string }): Observable<User> {
+    return this.http.post<User>(`${this.api}/users`, data);
   }
 
-  updateUser(id: string, data: any): Observable<any> {
-    return this.http.put(`${this.api}/users/${id}`, data);
+  updateUser(id: string, data: Partial<User>): Observable<User> {
+    return this.http.put<User>(`${this.api}/users/${id}`, data);
   }
 
-  deleteUser(id: string): Observable<any> {
-    return this.http.delete(`${this.api}/users/${id}`);
+  deleteUser(id: string): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.api}/users/${id}`);
+  }
+
+  resetPassword(userId: string, newPassword: string): Observable<{ message: string }> {
+    return this.http.put<{ message: string }>(`${this.api}/auth/reset-password/${userId}`, { newPassword });
   }
 
   /* ─── Services ─── */
-  getServices(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.api}/services`);
+  getServices(): Observable<SharedService[]> {
+    return this.http.get<SharedService[]>(`${this.api}/services`);
   }
 
-  createService(data: { name: string; totalCost: number; nextPaymentDate?: string; iconUrl?: string }): Observable<any> {
-    return this.http.post(`${this.api}/services`, data);
+  createService(data: { name: string; totalCost: number; nextPaymentDate?: string; iconUrl?: string }): Observable<SharedService> {
+    return this.http.post<SharedService>(`${this.api}/services`, data);
   }
 
-  updateService(id: string, data: any): Observable<any> {
-    return this.http.put(`${this.api}/services/${id}`, data);
+  updateService(id: string, data: Partial<SharedService>): Observable<SharedService> {
+    return this.http.put<SharedService>(`${this.api}/services/${id}`, data);
   }
 
-  deleteService(id: string): Observable<any> {
-    return this.http.delete(`${this.api}/services/${id}`);
+  deleteService(id: string): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.api}/services/${id}`);
   }
 
-  getServiceDebts(serviceId: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.api}/services/${serviceId}/debts`);
+  getServiceDebts(serviceId: string): Observable<UserServiceDebt[]> {
+    return this.http.get<UserServiceDebt[]>(`${this.api}/services/${serviceId}/debts`);
   }
 
-  updateServiceDebt(serviceId: string, userId: string, data: any): Observable<any> {
-    return this.http.put(`${this.api}/services/${serviceId}/debts/${userId}`, data);
+  updateServiceDebt(serviceId: string, userId: string, data: Partial<UserServiceDebt>): Observable<UserServiceDebt> {
+    return this.http.put<UserServiceDebt>(`${this.api}/services/${serviceId}/debts/${userId}`, data);
   }
 
   /* ─── Transport ─── */
-  getTransports(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.api}/transport`);
+  getTransports(): Observable<Transport[]> {
+    return this.http.get<Transport[]>(`${this.api}/transport`);
   }
 
-  createTransport(data: any): Observable<any> {
-    return this.http.post(`${this.api}/transport`, data);
+  createTransport(data: Partial<Transport>): Observable<Transport> {
+    return this.http.post<Transport>(`${this.api}/transport`, data);
   }
 
-  updateTransport(id: string, data: any): Observable<any> {
-    return this.http.put(`${this.api}/transport/${id}`, data);
+  updateTransport(id: string, data: Partial<Transport>): Observable<Transport> {
+    return this.http.put<Transport>(`${this.api}/transport/${id}`, data);
   }
 
   /* ─── Treasury ─── */
-  getTreasury(): Observable<any> {
-    return this.http.get(`${this.api}/treasury`);
+  getTreasury(): Observable<Treasury> {
+    return this.http.get<Treasury>(`${this.api}/treasury`);
   }
 
-  registerPayment(data: { userId: string; amountPaid: number }): Observable<any> {
-    return this.http.post(`${this.api}/treasury/payment`, data);
+  registerPayment(data: { userId: string; amountPaid: number }): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.api}/treasury/payment`, data);
   }
 
-  updateTreasury(data: { name?: string; nextGoalAmount?: number; nextGoalDescription?: string }): Observable<any> {
-    return this.http.put(`${this.api}/treasury`, data);
+  updateTreasury(data: { name?: string; nextGoalAmount?: number; nextGoalDescription?: string }): Observable<Treasury> {
+    return this.http.put<Treasury>(`${this.api}/treasury`, data);
   }
 
   /* ─── Reminders ─── */
-  getReminders(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.api}/reminders/all`);
+  getReminders(): Observable<Reminder[]> {
+    return this.http.get<Reminder[]>(`${this.api}/reminders/all`);
   }
 
-  createReminder(data: { title: string; message?: string; type?: string; expiresAt?: string }): Observable<any> {
-    return this.http.post(`${this.api}/reminders`, data);
+  createReminder(data: { title: string; message?: string; type?: string; expiresAt?: string }): Observable<Reminder> {
+    return this.http.post<Reminder>(`${this.api}/reminders`, data);
   }
 
-  toggleReminder(id: string): Observable<any> {
-    return this.http.put(`${this.api}/reminders/${id}/toggle`, {});
+  toggleReminder(id: string): Observable<Reminder> {
+    return this.http.put<Reminder>(`${this.api}/reminders/${id}/toggle`, {});
   }
 
-  deleteReminder(id: string): Observable<any> {
-    return this.http.delete(`${this.api}/reminders/${id}`);
+  deleteReminder(id: string): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.api}/reminders/${id}`);
   }
 }

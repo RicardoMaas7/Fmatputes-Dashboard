@@ -87,13 +87,13 @@ const getServiceDebts = async (req, res) => {
   try {
     const debts = await UserServiceDebt.findAll({
       where: { serviceId: req.params.id },
-      include: [{ association: 'user', attributes: ['id', 'name', 'email'] }],
+      include: [{ association: 'user', attributes: ['id', 'username', 'displayName'] }],
       order: [['userId', 'ASC']],
     });
     res.json(debts);
   } catch (error) {
-    console.error('[Services] Error fetching debts:', error);
-    res.status(500).json({ message: 'Error fetching service debts.' });
+    console.error('[Services] Error obteniendo deudas:', error);
+    res.status(500).json({ message: 'Error al obtener deudas del servicio.' });
   }
 };
 

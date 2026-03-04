@@ -68,8 +68,6 @@ export class AdminComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Load users always (for treasury dropdown)
-    this.admin.getUsers().subscribe({ next: (d) => (this.users = d) });
     this.loadTab('users');
   }
 
@@ -153,6 +151,18 @@ export class AdminComponent implements OnInit {
         this.loadTab('users');
       },
       error: (e) => this.flash(e.error?.message || 'Error al eliminar.', 'err'),
+    });
+  }
+
+  resetUserPassword(user: any): void {
+    const newPassword = prompt(`Nueva contraseña para "${user.username}" (mín. 6 caracteres):`);
+    if (!newPassword || newPassword.length < 6) {
+      if (newPassword !== null) this.flash('La contraseña debe tener al menos 6 caracteres.', 'err');
+      return;
+    }
+    this.admin.resetPassword(user.id, newPassword).subscribe({
+      next: () => this.flash(`Contraseña de ${user.username} restablecida.`, 'ok'),
+      error: (e) => this.flash(e.error?.message || 'Error al restablecer contraseña.', 'err'),
     });
   }
 

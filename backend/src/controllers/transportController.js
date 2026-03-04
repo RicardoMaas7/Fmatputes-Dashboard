@@ -56,9 +56,11 @@ const createTransport = async (req, res) => {
 const updateTransport = async (req, res) => {
   try {
     const transport = await Transport.findByPk(req.params.id);
-    if (!transport) return res.status(404).json({ message: 'Transport not found.' });
+    if (!transport) return res.status(404).json({ message: 'Transporte no encontrado.' });
 
-    const { paradero, departureMorning, returnMorning, totalSeats } = req.body;
+    const { name, driverName, paradero, departureMorning, returnMorning, totalSeats } = req.body;
+    if (name !== undefined) transport.name = name;
+    if (driverName !== undefined) transport.driverName = driverName;
     if (paradero !== undefined) transport.paradero = paradero;
     if (departureMorning !== undefined) transport.departureMorning = departureMorning;
     if (returnMorning !== undefined) transport.returnMorning = returnMorning;
@@ -67,8 +69,8 @@ const updateTransport = async (req, res) => {
     await transport.save();
     res.json(transport);
   } catch (error) {
-    console.error('[Transport] Error updating:', error);
-    res.status(500).json({ message: 'Error updating transport.' });
+    console.error('[Transport] Error actualizando:', error);
+    res.status(500).json({ message: 'Error al actualizar transporte.' });
   }
 };
 
@@ -99,9 +101,32 @@ const reserveSeat = async (req, res) => {
 
     res.status(201).json(seat);
   } catch (error) {
-    console.error('[Transport] Error reserving:', error);
-    res.status(500).json({ message: 'Error reserving seat.' });
+    console.error('[Transport] Error al reservar:', error);
+    res.status(500).json({ message: 'Error al reservar asiento.' });
   }
 };
 
-module.exports = { getAllTransports, createTransport, updateTransport, reserveSeat };
+// DELETE /api/transport/:id/cancel — Cancel own seat reservation
+const cancelSeat = async (req, res) => {
+  try {
+    const seat = await TransportSeat.findOne({
+      where: { transportId: req.params.id, userId: req.user.id },
+    });
+
+    if (!seat) {
+      return res.status(404).json({ message: 'No tienes un asiento reservado en este transporte.' });
+    }
+
+    const transport = await Transport.findByPk(req.params.id);
+    await seat.destroy();
+
+    await createNotification(req.user.id, `Cancelaste tu asiento en ${transport?.name || 'transporte'}.`, 'transport');
+
+    res.json({ message: 'Reservación cancelada.' });
+  } catch (error) {
+    console.error('[Transport] Error al cancelar:', error);
+    res.status(500).json({ message: 'Error al cancelar reservación.' });
+  }
+};
+
+module.exports = { getAllTransports, createTransport, updateTransport, reserveSeat, cancelSeat };

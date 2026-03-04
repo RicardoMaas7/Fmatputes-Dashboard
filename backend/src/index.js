@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 // Importar configuración de BD y Modelos (centralizado con asociaciones)
@@ -9,15 +11,39 @@ const models = require('./models');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configuración estricta de Arquitectura (Nginx / Cloudflare Proxy)
-app.set('trust proxy', 1); 
+// ── Seguridad ──────────────────────────────────────────────────────
+app.set('trust proxy', 1); // Nginx / Cloudflare
 
-// Middlewares globales
-app.use(cors());
-app.use(express.json());
+app.use(helmet({ contentSecurityPolicy: false })); // Headers de seguridad
+
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
+// Rate limiting global: 100 requests / 15 min por IP
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Demasiadas peticiones. Intenta de nuevo en unos minutos.' },
+});
+app.use(globalLimiter);
+
+// Rate limiting estricto para login
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 15,
+  message: { message: 'Demasiados intentos de inicio de sesión. Espera 15 minutos.' },
+});
+
+// ── Body parsers ──────────────────────────────────────────────────
+app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Endpoint de Healthcheck
+// ── Healthcheck ───────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
     const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     res.status(200).json({
@@ -27,50 +53,30 @@ app.get('/api/health', (req, res) => {
         message: 'Fmaputes API operando correctamente.'
     });
 });
-// Rutas de autenticación
-app.use('/api/auth', require('./routes/authRoutes'));
 
-// Registrar rutas de estadísticas (legacy, kept for compatibility)
-app.use('/api/stats', require('./routes/statsRoutes'));
-
-// Rutas de usuarios
+// ── Rutas ─────────────────────────────────────────────────────────
+app.use('/api/auth', authLimiter, require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
-
-// Rutas de votación
 app.use('/api/votes', require('./routes/voteRoutes'));
-
-// Rutas de servicios compartidos
 app.use('/api/services', require('./routes/serviceRoutes'));
-
-// Rutas de transporte
 app.use('/api/transport', require('./routes/transportRoutes'));
-
-// Rutas de tesorería
 app.use('/api/treasury', require('./routes/treasuryRoutes'));
-
-// Rutas de notificaciones
 app.use('/api/notifications', require('./routes/notificationRoutes'));
-
-// Rutas de cuentas bancarias
 app.use('/api/bank-accounts', require('./routes/bankAccountRoutes'));
-
-// Rutas de recordatorios
 app.use('/api/reminders', require('./routes/reminderRoutes'));
 
-// Inicialización del servidor y Base de Datos
+// ── Inicialización ────────────────────────────────────────────────
 const startServer = async () => {
     await connectDB();
     
-    // Sincroniza los modelos con la BD (crea las tablas si no existen)
-    // Nota: force: false evita que se borren los datos en cada reinicio
     await sequelize.sync({ force: false }); 
     console.log('[Base de Datos] Modelos sincronizados correctamente.');
 
-    // Auto-seed: populate initial data if database is empty
+    // Auto-seed: datos iniciales si la BD está vacía
     const { User } = models;
     const userCount = await User.count();
     if (userCount === 0) {
-        console.log('[Auto-Seed] No users found — running initial seed...');
+        console.log('[Auto-Seed] No se encontraron usuarios — ejecutando seed inicial...');
         try {
             const bcrypt = require('bcryptjs');
             const defaultPassword = await bcrypt.hash('fmaputes2026', 10);
@@ -91,45 +97,61 @@ const startServer = async () => {
                 { username: 'said', displayName: 'Said', birthday: '2003-08-05', role: 'user' },
             ];
 
-            for (const m of members) {
-                await User.create({ ...m, password: defaultPassword });
-            }
+            // bulkCreate es más eficiente que N inserts individuales
+            await User.bulkCreate(members.map(m => ({ ...m, password: defaultPassword })));
 
-            // Services
             const { SharedService, UserServiceDebt, Transport, Treasury, Notification } = models;
-            const chatgpt = await SharedService.create({ name: 'ChatGPT', totalCost: 20, nextPaymentDate: '2026-04-01', isActive: true });
-            const spotify = await SharedService.create({ name: 'Spotify', totalCost: 16.99, nextPaymentDate: '2026-04-01', isActive: true });
+            const [chatgpt, spotify] = await SharedService.bulkCreate([
+                { name: 'ChatGPT', totalCost: 20, nextPaymentDate: '2026-04-01', isActive: true },
+                { name: 'Spotify', totalCost: 16.99, nextPaymentDate: '2026-04-01', isActive: true },
+            ]);
 
             const allUsers = await User.findAll();
+            const debtRecords = [];
             for (const u of allUsers) {
-                await UserServiceDebt.create({ userId: u.id, serviceId: chatgpt.id, pendingBalance: 0 });
-                await UserServiceDebt.create({ userId: u.id, serviceId: spotify.id, pendingBalance: 0 });
+                debtRecords.push({ userId: u.id, serviceId: chatgpt.id, pendingBalance: 0 });
+                debtRecords.push({ userId: u.id, serviceId: spotify.id, pendingBalance: 0 });
             }
+            await UserServiceDebt.bulkCreate(debtRecords);
 
-            // Transport
-            await Transport.create({ name: 'FabioCar', driverName: 'Fabio', paradero: 'Paradero Quetzacoatl', departureMorning: '07:00', returnMorning: '14:00', totalSeats: 4, isActive: true });
-            await Transport.create({ name: 'Niconeta', driverName: 'Nico', paradero: 'Paradero Cholul', departureMorning: '07:15', returnMorning: '14:00', totalSeats: 4, isActive: true });
+            await Transport.bulkCreate([
+                { name: 'FabioCar', driverName: 'Fabio', paradero: 'Paradero Quetzacoatl', departureMorning: '07:00', returnMorning: '14:00', totalSeats: 4, isActive: true },
+                { name: 'Niconeta', driverName: 'Nico', paradero: 'Paradero Cholul', departureMorning: '07:15', returnMorning: '14:00', totalSeats: 4, isActive: true },
+            ]);
 
-            // Treasury
             await Treasury.create({ name: 'FMAPUTES', totalCollected: 0, nextGoalAmount: 5000, nextGoalDescription: 'Fondo semestral' });
 
-            // Welcome notification for admin
             const admin = await User.findOne({ where: { username: 'esteban' } });
             if (admin) {
                 await Notification.create({ userId: admin.id, message: '¡Bienvenido al sistema FMAPUTES!', type: 'general' });
             }
 
-            console.log('[Auto-Seed] ✅ Database seeded with 13 users, services, transports, and treasury.');
-            console.log('[Auto-Seed] Default password: fmaputes2026 | Admin: esteban');
+            console.log('[Auto-Seed] Base de datos sembrada: 13 usuarios, servicios, transportes y tesorería.');
+            console.log('[Auto-Seed] Contraseña por defecto: fmaputes2026 | Admin: esteban');
         } catch (seedError) {
-            console.error('[Auto-Seed] ⚠️ Seed error (non-fatal):', seedError.message);
+            console.error('[Auto-Seed] Error en seed (no fatal):', seedError.message);
         }
     }
 
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
         console.log(`[Backend] Servidor inicializado en el puerto ${PORT}`);
         console.log(`[Backend] Entorno: ${process.env.NODE_ENV || 'development'}`);
     });
+
+    // Graceful shutdown
+    const shutdown = async (signal) => {
+        console.log(`\n[Backend] Señal ${signal} recibida. Cerrando servidor...`);
+        server.close(async () => {
+            await sequelize.close();
+            console.log('[Backend] Conexión a BD cerrada. Proceso terminado.');
+            process.exit(0);
+        });
+        // Forzar cierre después de 10s
+        setTimeout(() => process.exit(1), 10000);
+    };
+
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('SIGINT', () => shutdown('SIGINT'));
 };
 
 startServer();

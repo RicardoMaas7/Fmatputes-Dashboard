@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
-const { User, BankAccount } = require('../models');
+const { User, BankAccount, SharedService, UserServiceDebt } = require('../models');
 
-// GET /api/users — List all users (admin)
+// GET /api/users — List all users
 const getAllUsers = async (req, res) => {
   try {
     const users = await User.findAll({
@@ -11,7 +11,7 @@ const getAllUsers = async (req, res) => {
     res.json(users);
   } catch (error) {
     console.error('[Users] Error:', error);
-    res.status(500).json({ message: 'Error fetching users.' });
+    res.status(500).json({ message: 'Error al obtener usuarios.' });
   }
 };
 
@@ -29,11 +29,11 @@ const getMe = async (req, res) => {
       ],
     });
 
-    if (!user) return res.status(404).json({ message: 'User not found.' });
+    if (!user) return res.status(404).json({ message: 'Usuario no encontrado.' });
     res.json(user);
   } catch (error) {
     console.error('[Users] Error:', error);
-    res.status(500).json({ message: 'Error fetching user data.' });
+    res.status(500).json({ message: 'Error al obtener datos del usuario.' });
   }
 };
 
@@ -76,6 +76,23 @@ const createUser = async (req, res) => {
     });
 
     const { password: _, ...userData } = user.get({ plain: true });
+
+    // Auto-assign debts for all active services
+    try {
+      const activeServices = await SharedService.findAll({ where: { isActive: true } });
+      if (activeServices.length > 0) {
+        await UserServiceDebt.bulkCreate(
+          activeServices.map((s) => ({
+            user_id: user.id,
+            service_id: s.id,
+            pendingBalance: 0,
+          }))
+        );
+      }
+    } catch (debtErr) {
+      console.error('[Users] Error asignando deudas al nuevo usuario:', debtErr);
+    }
+
     res.status(201).json(userData);
   } catch (error) {
     console.error('[Users] Error creating user:', error);
@@ -87,50 +104,51 @@ const createUser = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { displayName, birthday, profilePhotoUrl } = req.body;
+    const { displayName, birthday, profilePhotoUrl, role } = req.body;
 
     const user = await User.findByPk(id);
-    if (!user) return res.status(404).json({ message: 'User not found.' });
+    if (!user) return res.status(404).json({ message: 'Usuario no encontrado.' });
 
-    // Only admin or self can update
+    // Solo admin o el propio usuario pueden actualizar
     if (req.user.role !== 'admin' && req.user.id !== id) {
-      return res.status(403).json({ message: 'Unauthorized.' });
+      return res.status(403).json({ message: 'No autorizado.' });
     }
 
     if (displayName !== undefined) user.displayName = displayName;
     if (birthday !== undefined) user.birthday = birthday;
     if (profilePhotoUrl !== undefined) user.profilePhotoUrl = profilePhotoUrl;
 
+    // Solo un admin puede cambiar el rol
+    if (role !== undefined && req.user.role === 'admin') {
+      user.role = role;
+    }
+
     await user.save();
 
     const { password: _, ...userData } = user.get({ plain: true });
     res.json(userData);
   } catch (error) {
-    console.error('[Users] Error updating user:', error);
-    res.status(500).json({ message: 'Error updating user.' });
+    console.error('[Users] Error actualizando usuario:', error);
+    res.status(500).json({ message: 'Error al actualizar usuario.' });
   }
 };
 
-// DELETE /api/users/:id — Delete user (admin only)
+// DELETE /api/users/:id — Delete user (admin only, enforced by middleware)
 const deleteUser = async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Solo administradores pueden eliminar usuarios.' });
-    }
-
     const { id } = req.params;
     if (id === req.user.id) {
       return res.status(400).json({ message: 'No puedes eliminarte a ti mismo.' });
     }
 
     const user = await User.findByPk(id);
-    if (!user) return res.status(404).json({ message: 'User not found.' });
+    if (!user) return res.status(404).json({ message: 'Usuario no encontrado.' });
 
     await user.destroy();
     res.json({ message: 'Usuario eliminado.' });
   } catch (error) {
-    console.error('[Users] Error deleting user:', error);
-    res.status(500).json({ message: 'Error deleting user.' });
+    console.error('[Users] Error al eliminar usuario:', error);
+    res.status(500).json({ message: 'Error al eliminar usuario.' });
   }
 };
 

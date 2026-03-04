@@ -69,15 +69,11 @@ const registerPayment = async (req, res) => {
   }
 };
 
-// PUT /api/treasury — Update treasury goal (admin)
+// PUT /api/treasury — Update treasury goal (admin, enforced by middleware)
 const updateTreasury = async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Solo administradores.' });
-    }
-
     const treasury = await Treasury.findOne();
-    if (!treasury) return res.status(404).json({ message: 'Treasury not found.' });
+    if (!treasury) return res.status(404).json({ message: 'Tesorería no encontrada.' });
 
     const { name, nextGoalAmount, nextGoalDescription } = req.body;
     if (name !== undefined) treasury.name = name;
@@ -87,8 +83,8 @@ const updateTreasury = async (req, res) => {
     await treasury.save();
     res.json(treasury);
   } catch (error) {
-    console.error('[Treasury] Error updating:', error);
-    res.status(500).json({ message: 'Error updating treasury.' });
+    console.error('[Treasury] Error actualizando:', error);
+    res.status(500).json({ message: 'Error al actualizar tesorería.' });
   }
 };
 

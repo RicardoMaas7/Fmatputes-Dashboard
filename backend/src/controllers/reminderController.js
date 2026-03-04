@@ -22,12 +22,9 @@ const getReminders = async (req, res) => {
   }
 };
 
-// GET /api/reminders/all — Get ALL reminders including expired (admin)
+// GET /api/reminders/all — Get ALL reminders including expired (admin, enforced by middleware)
 const getAllReminders = async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Solo administradores.' });
-    }
     const reminders = await Reminder.findAll({
       include: [{ association: 'creator', attributes: ['id', 'displayName'] }],
       order: [['created_at', 'DESC']],
@@ -35,17 +32,13 @@ const getAllReminders = async (req, res) => {
     res.json(reminders);
   } catch (error) {
     console.error('[Reminders] Error:', error);
-    res.status(500).json({ message: 'Error fetching reminders.' });
+    res.status(500).json({ message: 'Error al obtener recordatorios.' });
   }
 };
 
-// POST /api/reminders — Create a reminder (admin only)
+// POST /api/reminders — Create a reminder (admin, enforced by middleware)
 const createReminder = async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Solo administradores pueden crear recordatorios.' });
-    }
-
     const { title, message, type, expiresAt } = req.body;
     if (!title) {
       return res.status(400).json({ message: 'El título es obligatorio.' });
@@ -66,40 +59,32 @@ const createReminder = async (req, res) => {
   }
 };
 
-// DELETE /api/reminders/:id — Delete a reminder (admin only)
+// DELETE /api/reminders/:id — Delete a reminder (admin, enforced by middleware)
 const deleteReminder = async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Solo administradores.' });
-    }
-
     const reminder = await Reminder.findByPk(req.params.id);
-    if (!reminder) return res.status(404).json({ message: 'Reminder not found.' });
+    if (!reminder) return res.status(404).json({ message: 'Recordatorio no encontrado.' });
 
     await reminder.destroy();
     res.json({ message: 'Recordatorio eliminado.' });
   } catch (error) {
-    console.error('[Reminders] Error deleting:', error);
-    res.status(500).json({ message: 'Error deleting reminder.' });
+    console.error('[Reminders] Error eliminando:', error);
+    res.status(500).json({ message: 'Error al eliminar recordatorio.' });
   }
 };
 
-// PUT /api/reminders/:id/toggle — Toggle active state (admin only)
+// PUT /api/reminders/:id/toggle — Toggle active state (admin, enforced by middleware)
 const toggleReminder = async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Solo administradores.' });
-    }
-
     const reminder = await Reminder.findByPk(req.params.id);
-    if (!reminder) return res.status(404).json({ message: 'Reminder not found.' });
+    if (!reminder) return res.status(404).json({ message: 'Recordatorio no encontrado.' });
 
     reminder.isActive = !reminder.isActive;
     await reminder.save();
     res.json(reminder);
   } catch (error) {
-    console.error('[Reminders] Error toggling:', error);
-    res.status(500).json({ message: 'Error toggling reminder.' });
+    console.error('[Reminders] Error alternando:', error);
+    res.status(500).json({ message: 'Error al alternar recordatorio.' });
   }
 };
 
