@@ -127,8 +127,10 @@ export class RadarChartComponent implements OnChanges {
   constructor(private sanitizer: DomSanitizer) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['svgContent'] && this.svgContent) {
-      this.safeSvg = this.sanitizer.bypassSecurityTrustHtml(this.svgContent);
+    if (changes['svgContent']) {
+      this.safeSvg = this.svgContent
+        ? this.sanitizer.bypassSecurityTrustHtml(this.svgContent)
+        : null;
     }
     if (changes['stats'] && this.stats) {
       this.statEntries = Object.entries(this.stats).map(([key, value]) => ({

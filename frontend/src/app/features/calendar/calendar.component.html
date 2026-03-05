@@ -142,6 +142,7 @@
           <div *ngIf="notifyingReminderId === r.id" class="mt-2 flex items-center gap-2 animate-fade-in">
             <select [(ngModel)]="notifyTeamId" class="neon-input text-[10px] flex-1" style="background: rgba(14,14,20,0.9);">
               <option value="">Selecciona equipo</option>
+              <option value="all">🔔 Todos</option>
               <option *ngFor="let t of teams" [value]="t.id">{{ t.name }}</option>
             </select>
             <button (click)="sendTeamNotification(r.id); $event.stopPropagation()"

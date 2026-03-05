@@ -1,4 +1,4 @@
-const { Vote, User } = require('../models');
+const { Vote, User, RadarOverride } = require('../models');
 const { sequelize } = require('../config/db');
 const { Op } = require('sequelize');
 const { runPythonScript } = require('../services/pythonRunner');
@@ -200,8 +200,22 @@ const getRadarSvg = async (req, res) => {
       return res.status(404).json({ message: 'User not found.' });
     }
 
-    // Get averages
     const period = req.query.period || getCurrentPeriod();
+
+    // Check for admin override first
+    const override = await RadarOverride.findOne({ where: { userId, period } });
+    if (override) {
+      return res.json({
+        userId,
+        username: user.username,
+        displayName: user.displayName,
+        stats: override.stats || {},
+        svg: override.svgContent || null,
+        isOverride: true,
+      });
+    }
+
+    // Get averages from votes
     const whereClause = { voteeId: userId, period };
 
     const votes = await Vote.findAll({
@@ -289,10 +303,158 @@ const getVoteStatus = async (req, res) => {
   }
 };
 
+// POST /api/votes/radar-override — Admin: upload SVG override for a user/period
+const uploadRadarOverride = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Solo administradores.' });
+    }
+
+    const { userId, period, svgContent, stats } = req.body;
+    if (!userId || !period) {
+      return res.status(400).json({ message: 'userId y period son obligatorios.' });
+    }
+
+    const user = await User.findByPk(userId);
+    if (!user) return res.status(404).json({ message: 'Usuario no encontrado.' });
+
+    const [override, created] = await RadarOverride.findOrCreate({
+      where: { userId, period },
+      defaults: { svgContent: svgContent || null, stats: stats || null },
+    });
+
+    if (!created) {
+      if (svgContent !== undefined) override.svgContent = svgContent;
+      if (stats !== undefined) override.stats = stats;
+      await override.save();
+    }
+
+    res.json({
+      message: created ? 'Override creado.' : 'Override actualizado.',
+      override,
+    });
+  } catch (error) {
+    console.error('[Votes] Error uploading radar override:', error);
+    res.status(500).json({ message: 'Error al guardar override de radar.' });
+  }
+};
+
+// POST /api/votes/import-csv — Admin: bulk import votes from CSV
+const importVotesCsv = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Solo administradores.' });
+    }
+
+    const { csvData, period, voterId } = req.body;
+    // csvData: "Nombre,Math,Code,Team,Disc,Soc\nEsteban,8,7,9,6,8\n..."
+    if (!csvData || !period) {
+      return res.status(400).json({ message: 'csvData y period son obligatorios.' });
+    }
+
+    const lines = csvData.trim().split('\n').map(l => l.trim()).filter(l => l);
+    if (lines.length < 2) {
+      return res.status(400).json({ message: 'El CSV debe tener al menos un encabezado y una fila de datos.' });
+    }
+
+    // Parse header — expected: Nombre,Math,Code,Team,Disc,Soc
+    const categoryMap = {
+      math: 'mathematics',
+      mathematics: 'mathematics',
+      code: 'programming',
+      programming: 'programming',
+      team: 'teamwork',
+      teamwork: 'teamwork',
+      disc: 'discipline',
+      discipline: 'discipline',
+      soc: 'sociability',
+      sociability: 'sociability',
+    };
+
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    const nameIdx = headers.findIndex(h => h === 'nombre' || h === 'name');
+    if (nameIdx === -1) {
+      return res.status(400).json({ message: 'El CSV debe tener una columna "Nombre".' });
+    }
+
+    const catColumns = [];
+    for (let i = 0; i < headers.length; i++) {
+      if (i === nameIdx) continue;
+      const mapped = categoryMap[headers[i]];
+      if (mapped) catColumns.push({ idx: i, category: mapped });
+    }
+
+    if (catColumns.length === 0) {
+      return res.status(400).json({ message: 'No se encontraron columnas de categoría válidas (Math, Code, Team, Disc, Soc).' });
+    }
+
+    // Look up all users
+    const allUsers = await User.findAll({ attributes: ['id', 'username', 'displayName'] });
+    const userMap = {};
+    allUsers.forEach(u => {
+      userMap[u.username.toLowerCase()] = u.id;
+      if (u.displayName) userMap[u.displayName.toLowerCase()] = u.id;
+    });
+
+    // Use a admin pseudo-voter if voterId not given
+    const adminId = voterId || req.user.id;
+
+    const records = [];
+    const errors = [];
+
+    for (let row = 1; row < lines.length; row++) {
+      const cols = lines[row].split(',').map(c => c.trim());
+      const name = cols[nameIdx];
+      if (!name) continue;
+
+      const voteeId = userMap[name.toLowerCase()];
+      if (!voteeId) {
+        errors.push(`Fila ${row + 1}: usuario "${name}" no encontrado.`);
+        continue;
+      }
+
+      for (const { idx, category } of catColumns) {
+        const score = parseFloat(cols[idx]);
+        if (isNaN(score) || score < 1 || score > 10) {
+          errors.push(`Fila ${row + 1}: puntuación inválida "${cols[idx]}" para ${category}.`);
+          continue;
+        }
+        records.push({
+          voterId: adminId,
+          voteeId,
+          category,
+          score: Math.round(score),
+          period,
+        });
+      }
+    }
+
+    if (records.length === 0) {
+      return res.status(400).json({ message: 'No se generaron votos válidos.', errors });
+    }
+
+    // Upsert: use bulkCreate with updateOnDuplicate
+    const created = await Vote.bulkCreate(records, {
+      updateOnDuplicate: ['score', 'updated_at'],
+    });
+
+    res.json({
+      message: `${created.length} votos importados para el periodo ${period}.`,
+      imported: created.length,
+      errors: errors.length > 0 ? errors : undefined,
+    });
+  } catch (error) {
+    console.error('[Votes] Error importing CSV:', error);
+    res.status(500).json({ message: 'Error al importar CSV.' });
+  }
+};
+
 module.exports = {
   submitVotes,
   getResults,
   getPending,
   getRadarSvg,
   getVoteStatus,
+  uploadRadarOverride,
+  importVotesCsv,
 };

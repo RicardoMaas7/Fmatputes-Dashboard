@@ -383,4 +383,68 @@
       No hay recordatorios. Crea uno para que todos lo vean en su dashboard.
     </div>
   </div>
+
+  <!-- ═══════ VOTING TAB ═══════ -->
+  <div *ngIf="!loading && activeTab === 'voting'">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- SVG Upload -->
+      <div class="neon-card p-4">
+        <h3 class="text-sm text-wired-amber uppercase tracking-wider mb-3">Subir Radar SVG</h3>
+        <p class="text-[10px] text-wired-dim-light mb-3">Sube un SVG de radar pre-generado para un usuario y periodo específico.</p>
+        <div class="space-y-3">
+          <div>
+            <label class="text-[10px] text-wired-dim-light uppercase block mb-1">Usuario</label>
+            <select [(ngModel)]="svgUpload.userId" class="neon-input text-sm w-full bg-wired-panel">
+              <option value="">Seleccionar usuario...</option>
+              <option *ngFor="let u of users" [value]="u.id">{{ u.displayName || u.username }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[10px] text-wired-dim-light uppercase block mb-1">Periodo (ej: 2025-S2)</label>
+            <input [(ngModel)]="svgUpload.period" placeholder="2025-S2" class="neon-input text-sm w-full" />
+          </div>
+          <div>
+            <label class="text-[10px] text-wired-dim-light uppercase block mb-1">Archivo SVG</label>
+            <input type="file" accept=".svg" (change)="onSvgFileSelected($event)" class="neon-input text-sm w-full" />
+          </div>
+          <div *ngIf="svgUpload.svgContent" class="text-[10px] text-wired-neon">
+            ✓ SVG cargado ({{ svgUpload.svgContent.length }} caracteres)
+          </div>
+          <button (click)="uploadSvgOverride()" class="neon-btn text-xs px-4 py-2 w-full"
+                  [disabled]="!svgUpload.userId || !svgUpload.period || !svgUpload.svgContent">
+            SUBIR SVG
+          </button>
+        </div>
+      </div>
+
+      <!-- CSV Import -->
+      <div class="neon-card p-4">
+        <h3 class="text-sm text-wired-amber uppercase tracking-wider mb-3">Importar Votos (CSV)</h3>
+        <p class="text-[10px] text-wired-dim-light mb-3">
+          Formato: <code class="text-wired-neon">Nombre,Math,Code,Team,Disc,Soc</code>
+        </p>
+        <div class="space-y-3">
+          <div>
+            <label class="text-[10px] text-wired-dim-light uppercase block mb-1">Periodo (ej: 2025-S2)</label>
+            <input [(ngModel)]="csvImport.period" placeholder="2025-S2" class="neon-input text-sm w-full" />
+          </div>
+          <div>
+            <label class="text-[10px] text-wired-dim-light uppercase block mb-1">Archivo CSV o pegar datos</label>
+            <input type="file" accept=".csv,.txt" (change)="onCsvFileSelected($event)" class="neon-input text-sm w-full mb-2" />
+            <textarea [(ngModel)]="csvImport.csvData" rows="6" class="neon-input text-xs w-full font-mono"
+                      placeholder="Nombre,Math,Code,Team,Disc,Soc&#10;Esteban,8,7,9,6,8&#10;Christopher,7,8,8,7,9"></textarea>
+          </div>
+          <button (click)="importCsv()" class="neon-btn text-xs px-4 py-2 w-full"
+                  [disabled]="!csvImport.period || !csvImport.csvData">
+            IMPORTAR CSV
+          </button>
+          <div *ngIf="votingMsg" class="text-[10px] text-wired-amber whitespace-pre-line mt-2 p-2 border border-wired-amber/20 rounded">
+            {{ votingMsg }}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </div>

@@ -12,6 +12,7 @@ const Reminder = require('./Reminder');
 const Team = require('./Team');
 const TeamMember = require('./TeamMember');
 const TransportStop = require('./TransportStop');
+const RadarOverride = require('./RadarOverride');
 
 // ===== ASSOCIATIONS =====
 
@@ -83,6 +84,10 @@ TeamMember.belongsTo(Team, { foreignKey: 'team_id', as: 'team' });
 TeamMember.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 User.hasMany(TeamMember, { foreignKey: 'user_id', as: 'teamMemberships' });
 
+// User <-> RadarOverride
+User.hasMany(RadarOverride, { foreignKey: 'user_id', as: 'radarOverrides' });
+RadarOverride.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
 module.exports = {
   User,
   Vote,
@@ -98,4 +103,5 @@ module.exports = {
   Reminder,
   Team,
   TeamMember,
+  RadarOverride,
 };

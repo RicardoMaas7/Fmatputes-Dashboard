@@ -37,7 +37,7 @@ const getAllTransports = async (req, res) => {
         ...data,
         occupiedSeats: data.seats.length,
         availableSeats: data.totalSeats - data.seats.length,
-        userPendingBalance: data.seats.find((s) => s.userId === req.user.id)?.pendingBalance || 0,
+        userPendingBalance: parseFloat(data.seats.find((s) => s.userId === req.user.id)?.pendingBalance) || 0,
       };
     });
 

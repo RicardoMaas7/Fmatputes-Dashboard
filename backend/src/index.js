@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 3000;
 // ── Seguridad ──────────────────────────────────────────────────────
 app.set('trust proxy', 1); // Nginx / Cloudflare
 
-app.use(helmet({ contentSecurityPolicy: false })); // Headers de seguridad
+app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: { policy: 'cross-origin' } })); // Headers de seguridad
 
 app.use(cors({
   origin: process.env.CORS_ORIGIN || '*',
@@ -26,7 +26,7 @@ app.use(cors({
 // Rate limiting global: 100 requests / 15 min por IP
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
+  max: 500,
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: 'Demasiadas peticiones. Intenta de nuevo en unos minutos.' },

@@ -18,8 +18,8 @@ interface BankAccount {
   imports: [CommonModule, FormsModule],
   template: `
     <div class="space-y-2 animate-fade-in">
-      <div 
-        *ngFor="let account of accounts; let i = index"
+      <ng-container *ngFor="let account of accounts; let i = index">
+      <div
         class="bank-card"
         [ngClass]="getBankClass(account.bankName)"
         [class.cursor-pointer]="mode === 'dashboard'"
@@ -37,7 +37,7 @@ interface BankAccount {
              [ngClass]="copiedId === account.id ? 'text-wired-neon' : 'text-wired-dim-light'">
             <ng-container *ngIf="copiedId === account.id">¡COPIADO!</ng-container>
             <ng-container *ngIf="copiedId !== account.id">
-              {{ mode === 'dashboard' ? formatAccount(account.accountNumber) : (isRevealed(account) ? formatAccount(account.accountNumber) : maskAccount(account.accountNumber)) }}
+              {{ formatAccount(account.accountNumber) }}
             </ng-container>
           </p>
         </div>
@@ -46,27 +46,14 @@ interface BankAccount {
           <ng-container *ngIf="mode === 'dashboard'">
             <span class="text-wired-dim-light text-[9px] opacity-50">CLICK PARA COPIAR</span>
           </ng-container>
-          <!-- Profile mode: reveal, copy, delete -->
+          <!-- Profile mode: edit, delete -->
           <ng-container *ngIf="mode === 'profile'">
-            <button (click)="toggleReveal(account); $event.stopPropagation()" 
+            <button (click)="startEdit(account); $event.stopPropagation()" 
                     class="text-wired-dim-light hover:text-wired-neon transition-colors p-0.5"
-                    [title]="isRevealed(account) ? 'Ocultar' : 'Mostrar'">
-              <svg *ngIf="!isRevealed(account)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-              </svg>
-              <svg *ngIf="isRevealed(account)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                <line x1="1" y1="1" x2="23" y2="23"/>
-              </svg>
-            </button>
-            <button (click)="copyAccount(account); $event.stopPropagation()" 
-                    class="text-wired-dim-light hover:text-wired-neon transition-colors p-0.5"
-                    [title]="copiedId === account.id ? '¡Copiado!' : 'Copiar'">
-              <svg *ngIf="copiedId !== account.id" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-              </svg>
-              <svg *ngIf="copiedId === account.id" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#39ff14" stroke-width="2.5">
-                <polyline points="20 6 9 17 4 12"/>
+                    title="Editar">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
               </svg>
             </button>
             <button (click)="removeAccount(account); $event.stopPropagation()" 
@@ -79,6 +66,19 @@ interface BankAccount {
           </ng-container>
         </div>
       </div>
+
+      <!-- Inline edit form -->
+      <div *ngIf="editingAccount?.id === account.id && mode === 'profile'" 
+           class="p-2 border border-wired-neon/15 rounded animate-fade-in mt-1 mb-1" style="background: rgba(10,10,10,0.8);">
+        <div class="flex items-center gap-2">
+          <input [(ngModel)]="editAccountNumber" placeholder="Número de cuenta" class="neon-input text-xs flex-1" />
+          <button (click)="saveEdit(account)" class="neon-btn text-[9px] px-2 py-1">OK</button>
+          <button (click)="editingAccount = null" class="text-[10px] text-wired-dim-light hover:text-white px-1">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      </ng-container>
 
       <div *ngIf="accounts.length === 0 && !showAddForm" 
            class="text-center text-wired-dim-light text-[10px] p-3 border border-dashed border-wired-dim opacity-40">
@@ -127,6 +127,8 @@ export class BankAccountsComponent {
   newAccount = { bankName: '', accountNumber: '' };
   revealedIds = new Set<string>();
   copiedId: string | null = null;
+  editingAccount: BankAccount | null = null;
+  editAccountNumber = '';
 
   constructor(
     private sanitizer: DomSanitizer,
@@ -184,6 +186,24 @@ export class BankAccountsComponent {
         this.accountsChanged.emit();
       },
       error: (e) => console.error('Error removing account:', e),
+    });
+  }
+
+  startEdit(account: BankAccount): void {
+    this.editingAccount = account;
+    this.editAccountNumber = account.accountNumber;
+  }
+
+  saveEdit(account: BankAccount): void {
+    if (!account.id || !this.editAccountNumber.trim()) return;
+    this.dashboard.updateBankAccount(account.id, { accountNumber: this.editAccountNumber.trim() }).subscribe({
+      next: (updated) => {
+        const idx = this.accounts.findIndex(a => a.id === account.id);
+        if (idx >= 0) this.accounts[idx].accountNumber = updated.accountNumber || this.editAccountNumber.trim();
+        this.editingAccount = null;
+        this.accountsChanged.emit();
+      },
+      error: (e) => console.error('Error updating account:', e),
     });
   }
 

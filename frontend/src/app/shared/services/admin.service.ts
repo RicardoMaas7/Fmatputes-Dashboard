@@ -102,4 +102,13 @@ export class AdminService {
   deleteReminder(id: string): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(`${this.api}/reminders/${id}`);
   }
+
+  /* ─── Voting / Radar ─── */
+  uploadRadarOverride(data: { userId: string; period: string; svgContent?: string; stats?: Record<string, number> }): Observable<any> {
+    return this.http.post(`${this.api}/votes/radar-override`, data);
+  }
+
+  importVotesCsv(data: { csvData: string; period: string; voterId?: string }): Observable<any> {
+    return this.http.post(`${this.api}/votes/import-csv`, data);
+  }
 }

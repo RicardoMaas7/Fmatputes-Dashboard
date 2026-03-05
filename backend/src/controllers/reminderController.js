@@ -89,7 +89,7 @@ const toggleReminder = async (req, res) => {
   }
 };
 
-// POST /api/reminders/:id/notify-team — Send reminder as notification to all members of a team
+// POST /api/reminders/:id/notify-team — Send reminder as notification to all members of a team (or all users)
 const notifyTeam = async (req, res) => {
   try {
     const { teamId } = req.body;
@@ -98,15 +98,26 @@ const notifyTeam = async (req, res) => {
     const reminder = await Reminder.findByPk(req.params.id);
     if (!reminder) return res.status(404).json({ message: 'Recordatorio no encontrado.' });
 
-    const members = await TeamMember.findAll({ where: { teamId } });
-    if (!members.length) return res.status(404).json({ message: 'El equipo no tiene miembros.' });
+    let userIds = [];
 
-    const notifPromises = members.map((m) =>
-      createNotification(m.userId, `📅 Recordatorio: ${reminder.title}${reminder.message ? ' — ' + reminder.message : ''}`, 'general')
+    if (teamId === 'all') {
+      // Notify all users
+      const allUsers = await User.findAll({ attributes: ['id'] });
+      userIds = allUsers.map(u => u.id);
+    } else {
+      const members = await TeamMember.findAll({ where: { teamId } });
+      if (!members.length) return res.status(404).json({ message: 'El equipo no tiene miembros.' });
+      userIds = members.map(m => m.userId);
+    }
+
+    if (!userIds.length) return res.status(404).json({ message: 'No se encontraron usuarios para notificar.' });
+
+    const notifPromises = userIds.map((uid) =>
+      createNotification(uid, `📅 Recordatorio: ${reminder.title}${reminder.message ? ' — ' + reminder.message : ''}`, 'general')
     );
     await Promise.all(notifPromises);
 
-    res.json({ message: `Notificación enviada a ${members.length} miembro(s).`, count: members.length });
+    res.json({ message: `Notificación enviada a ${userIds.length} miembro(s).`, count: userIds.length });
   } catch (error) {
     console.error('[Reminders] Error notifying team:', error);
     res.status(500).json({ message: 'Error al notificar al equipo.' });

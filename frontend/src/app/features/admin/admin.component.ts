@@ -4,9 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../shared/services/admin.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ConfirmModalService } from '../../shared/services/confirm-modal.service';
-import { User, SharedService, UserServiceDebt, Transport, Treasury, Reminder } from '../../shared/models';
+import {
+  User, SharedService, UserServiceDebt, Transport, Treasury, Reminder
+} from '../../shared/models';
 
-type Tab = 'users' | 'services' | 'transport' | 'treasury' | 'reminders';
+type Tab = 'users' | 'services' | 'transport' | 'treasury' | 'reminders' | 'voting';
 
 @Component({
   selector: 'app-admin',
@@ -26,6 +28,7 @@ export class AdminComponent implements OnInit {
     { key: 'transport', label: 'Transporte', icon: 'transport' },
     { key: 'treasury', label: 'Tesorería', icon: 'treasury' },
     { key: 'reminders', label: 'Recordatorios', icon: 'reminders' },
+    { key: 'voting', label: 'Votación', icon: 'voting' },
   ];
 
   tabIcons: Record<string, string> = {
@@ -34,6 +37,7 @@ export class AdminComponent implements OnInit {
     transport: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M3 12h18"/><circle cx="7" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg>',
     treasury: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
     reminders: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+    voting: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/><line x1="12" y1="2" x2="12" y2="22"/></svg>',
   };
 
   /* ─── Users ─── */
@@ -62,6 +66,11 @@ export class AdminComponent implements OnInit {
   reminders: Reminder[] = [];
   newReminder = { title: '', message: '', type: 'info', expiresAt: '' };
   showNewReminderForm = false;
+
+  /* ─── Voting / Radar ─── */
+  svgUpload = { userId: '', period: '', svgContent: '' };
+  csvImport = { csvData: '', period: '' };
+  votingMsg: string | null = null;
 
   constructor(private admin: AdminService, private sanitizer: DomSanitizer, private modal: ConfirmModalService) {}
 
@@ -109,6 +118,13 @@ export class AdminComponent implements OnInit {
       case 'reminders':
         this.admin.getReminders().subscribe({
           next: (d) => { this.reminders = d; this.loading = false; },
+          error: () => { this.loading = false; },
+        });
+        break;
+      case 'voting':
+        // Load users list for SVG upload user picker
+        this.admin.getUsers().subscribe({
+          next: (d) => { this.users = d; this.loading = false; },
           error: () => { this.loading = false; },
         });
         break;
@@ -324,5 +340,57 @@ export class AdminComponent implements OnInit {
       },
       error: (e) => this.flash(e.error?.message || 'Error.', 'err'),
     });
+  }
+
+  /* ─── Voting Actions ─── */
+  uploadSvgOverride(): void {
+    if (!this.svgUpload.userId || !this.svgUpload.period || !this.svgUpload.svgContent) {
+      this.flash('Completa usuario, periodo y SVG.', 'err');
+      return;
+    }
+    this.admin.uploadRadarOverride(this.svgUpload).subscribe({
+      next: (res) => {
+        this.flash(res.message || 'SVG guardado.', 'ok');
+        this.svgUpload = { userId: '', period: '', svgContent: '' };
+      },
+      error: (e) => this.flash(e.error?.message || 'Error al subir SVG.', 'err'),
+    });
+  }
+
+  onSvgFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.svgUpload.svgContent = reader.result as string;
+    };
+    reader.readAsText(file);
+  }
+
+  importCsv(): void {
+    if (!this.csvImport.csvData || !this.csvImport.period) {
+      this.flash('Pega el CSV y define el periodo.', 'err');
+      return;
+    }
+    this.admin.importVotesCsv(this.csvImport).subscribe({
+      next: (res) => {
+        const errMsg = res.errors?.length ? ` (${res.errors.length} errores)` : '';
+        this.flash(`${res.message}${errMsg}`, 'ok');
+        this.votingMsg = res.errors?.join('\n') || null;
+      },
+      error: (e) => this.flash(e.error?.message || 'Error al importar CSV.', 'err'),
+    });
+  }
+
+  onCsvFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.csvImport.csvData = reader.result as string;
+    };
+    reader.readAsText(file);
   }
 }
